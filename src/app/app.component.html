@@ -5,11 +5,11 @@
 <button (click)="onTrainingStream()">Run Training (Live Logs)</button>
 
 <div *ngIf="log">
-  <h3>Epoch: {{ log()?.epoch }}</h3>
-  <p>Winner: {{ log()?.winner }}</p>
+  <h3>Epoch: {{ log().epoch }}</h3>
+  <p>Winner: {{ log().winner }}</p>
   <p>Rewards: </p>
-  <p>A: {{ log()?.reward_A }}, B: {{ log()?.reward_B }}</p>
-  <pre>{{ log()?.wins | json }}</pre>
+  <p>A: {{ log().reward_A }}, B: {{ log().reward_B }}</p>
+  <pre>{{ log().wins | json }}</pre>
 </div>
 
 {{ log() | json }}
