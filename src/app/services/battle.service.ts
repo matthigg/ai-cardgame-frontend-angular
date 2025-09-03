@@ -6,22 +6,16 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class BattleService {
-  private apiUrl = 'http://127.0.0.1:8000'; // FastAPI backend
+  private apiUrl = 'http://127.0.0.1:8000/battle'; // adjust if backend runs elsewhere
 
   constructor(private http: HttpClient) {}
 
-  runBattle(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/battle`, {}); 
-    // Adjust endpoint + payload based on your FastAPI route
+  getTrain(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/train`);
   }
 
-  runSimulate(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/battle`, {}); 
-    // Adjust endpoint + payload based on your FastAPI route
+  getTrainingStream(): EventSource {
+    return new EventSource(`${this.apiUrl}/training-stream`);
   }
 
-  getLogs(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/logs`);
-    // Adjust if your backend uses a different path for logs
-  }
 }
