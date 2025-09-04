@@ -1,5 +1,5 @@
-<!-- <ng-container *ngIf="data"> -->
-  asdf
-  <div #chartContainer class="chart-container"></div>
+<div #chartContainer class="chart-container"></div>
 
-<!-- </ng-container> -->
+<div class="status-panel">
+  <div *ngFor="let msg of statusMessages">{{ msg }}</div>
+</div>

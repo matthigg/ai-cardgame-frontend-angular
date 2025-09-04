@@ -4,4 +4,7 @@
 
 <button (click)="onTrainingStream()">Run Training (Live Logs)</button>
 
-<app-d3-xy-graph [logs]="data"></app-d3-xy-graph>
+<app-d3-xy-graph 
+  [logs]="logs"
+  [statusMessages]="statusMessages"
+></app-d3-xy-graph>

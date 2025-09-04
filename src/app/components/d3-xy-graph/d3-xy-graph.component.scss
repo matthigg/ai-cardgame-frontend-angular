@@ -1,9 +1,16 @@
 .chart-container {
-  width: 600px;
-  height: 400px;
-  margin: auto;
+  margin-top: 10px;
 }
 
 .line {
   transition: all 0.3s ease;
 }
+
+.status-panel {
+  padding: 8px;
+  background: #f0f0f0;
+  border-bottom: 1px solid #ccc;
+  font-family: monospace;
+  font-size: 0.9rem;
+}
+

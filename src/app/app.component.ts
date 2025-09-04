@@ -19,7 +19,9 @@ import { D3XyGraphComponent } from './components/d3-xy-graph/d3-xy-graph.compone
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
-  data: WritableSignal<any> = signal([])
+  logs: WritableSignal<any> = signal([])
+
+  public statusMessages: string[] = [];
 
   constructor(private battleService: BattleService) {}
 
@@ -33,14 +35,16 @@ export class AppComponent {
     eventSource.onmessage = (event) => {
       const data = JSON.parse(event.data);
 
-      if (data.status === "completed") {
-        console.log("Training finished");
-        eventSource.close();
-        return;
-      }
+      if (Array.isArray(data)) {
+        this.logs.set(data);  // only BattleLog arrays go to the chart
+      } else if (data.status) {
+        this.statusMessages.push(`Status: ${data.status}`);
+        console.log("Training status:", data.status);
 
-      this.data.set(data); 
-      // console.log("UI rendering log:", this.data());
+        if (data.status === "completed") {
+          eventSource.close();
+        }
+      }
     };
 
     eventSource.onerror = (error) => {
@@ -48,5 +52,6 @@ export class AppComponent {
       eventSource.close();
     };
   }
+
 
 }

@@ -18,6 +18,7 @@ export class D3XyGraphComponent implements OnInit, AfterViewInit {
   @ViewChild('chartContainer', { static: true }) chartContainer!: ElementRef;
 
   @Input() logs: WritableSignal<BattleLog[]> = signal<BattleLog[]>([]);
+  @Input() statusMessages: string[] = []
 
   private svgRoot!: d3.Selection<SVGSVGElement, unknown, null, undefined>;
   private svg!: d3.Selection<SVGGElement, unknown, null, undefined>;
@@ -31,7 +32,7 @@ export class D3XyGraphComponent implements OnInit, AfterViewInit {
   private color = d3.scaleOrdinal<string>().range(["steelblue", "tomato"]);
 
   // === Toggle mode ===
-  private appendMode = false; // ⬅️ switch this to false for per-epoch re-render
+  private appendMode = true; // false = per-epoch re-render
 
   // Persistent state for append mode
   private fullData: BattleLog[] = [];
@@ -41,7 +42,7 @@ export class D3XyGraphComponent implements OnInit, AfterViewInit {
   constructor() {
     effect(() => {
       this.updateChart(this.logs());
-    })
+    });
   }
 
   ngOnInit(): void {}
@@ -77,18 +78,22 @@ export class D3XyGraphComponent implements OnInit, AfterViewInit {
   }
 
   updateChart(newLogs: BattleLog[]): void {
-    if (!newLogs || newLogs.length === 0) return;
+    if (!Array.isArray(newLogs) || newLogs.length === 0) return;
 
     let dataToPlot: BattleLog[] = [];
 
     if (this.appendMode) {
       // === Append mode ===
+
+      // Detect new epoch by tick reset
+      const isNewEpoch = newLogs[0].tick === 0 && this.fullData.length > 0;
+
       const shiftedLogs = newLogs.map(d => ({
         ...d,
         tick: d.tick + this.tickOffset
       }));
 
-      if (this.fullData.length > 0) {
+      if (isNewEpoch) {
         this.epochBoundaries.push(this.tickOffset);
       }
 
@@ -97,12 +102,11 @@ export class D3XyGraphComponent implements OnInit, AfterViewInit {
 
       dataToPlot = this.fullData;
     } else {
-      // === Re-render mode ===
-      this.fullData = [];
+      // === Re-render per epoch ===
+      dataToPlot = newLogs;
+      this.fullData = [...newLogs];
       this.epochBoundaries = [];
       this.tickOffset = 0;
-
-      dataToPlot = newLogs;
     }
 
     // Group by creature
@@ -131,7 +135,7 @@ export class D3XyGraphComponent implements OnInit, AfterViewInit {
       .attr("stroke", d => this.color(d[0])!)
       .attr("d", d => this.line(d[1]));
 
-    // === Update epoch separators (only in append mode) ===
+    // === Update epoch separators (append mode only) ===
     const epochLines = this.svg.select<SVGGElement>("g.epoch-lines")
       .selectAll<SVGLineElement, number>("line.epoch-line")
       .data(this.appendMode ? this.epochBoundaries : []);
