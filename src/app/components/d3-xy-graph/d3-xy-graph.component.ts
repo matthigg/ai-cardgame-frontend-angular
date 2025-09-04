@@ -160,7 +160,7 @@ export class D3XyGraphComponent implements OnInit, AfterViewInit {
       .attr('x1', d => this.x(d as number))
       .attr('x2', d => this.x(d as number));
 
-    console.log('--- dataToPlot: ', dataToPlot);
+    // console.log('--- dataToPlot: ', dataToPlot);
   }
 
   setStat(stat: 'hp' | 'energy' | 'reward') {

@@ -18,4 +18,8 @@ export class BattleService {
     return new EventSource(`${this.apiUrl}/training-stream`);
   }
 
+  getSummary(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/summary`);
+  }
+
 }
