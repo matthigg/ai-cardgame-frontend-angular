@@ -19,9 +19,8 @@ export class D3XyGraphComponent implements OnInit, AfterViewInit {
 
   @Input() logs: WritableSignal<BattleLog[]> = signal<BattleLog[]>([]);
   @Input() statusMessages: WritableSignal<string[]> = signal([]);
-  @Input() maxTicks: number = 100; // max ticks to display
-  @Input() appendMode: boolean = true; // append vs full re-render
-  @Input() statusMessagesLength: number = 10; // max messages to keep
+  @Input() maxTicks: number = 100; // visible ticks window
+  @Input() appendMode: boolean = true; // append vs full redraw
 
   private svgRoot!: d3.Selection<SVGSVGElement, unknown, null, undefined>;
   private svg!: d3.Selection<SVGGElement, unknown, null, undefined>;
@@ -31,11 +30,11 @@ export class D3XyGraphComponent implements OnInit, AfterViewInit {
 
   private x!: d3.ScaleLinear<number, number>;
   private y!: d3.ScaleLinear<number, number>;
-  private line!: d3.Line<BattleLog>;
+  private line!: d3.Line<BattleLog | null>;
   private color = d3.scaleOrdinal<string>().range(["steelblue", "tomato"]);
 
-  // Persistent state for append mode
-  private fullData: BattleLog[] = [];
+  // Persistent state
+  private fullData: (BattleLog | null)[] = [];
   private epochBoundaries: number[] = [];
   private tickOffset = 0;
   private includeEpochBoundaries = true;
@@ -62,9 +61,10 @@ export class D3XyGraphComponent implements OnInit, AfterViewInit {
     this.x = d3.scaleLinear().range([0, this.width]);
     this.y = d3.scaleLinear().range([this.height, 0]);
 
-    this.line = d3.line<BattleLog>()
-      .x(d => this.x(d.tick))
-      .y(d => this.y(d.hp));
+    this.line = d3.line<BattleLog | null>()
+      .defined(d => d !== null)
+      .x(d => this.x(d!.tick))
+      .y(d => this.y(d!.hp));
 
     this.svg.append("g").attr("class", "x-axis").attr("transform", `translate(0,${this.height})`);
     this.svg.append("g").attr("class", "y-axis");
@@ -74,38 +74,43 @@ export class D3XyGraphComponent implements OnInit, AfterViewInit {
   updateChart(newLogs: BattleLog[]): void {
     if (!Array.isArray(newLogs) || newLogs.length === 0) return;
 
-    let dataToPlot: BattleLog[] = [];
+    let dataToPlot: (BattleLog | null)[] = [];
 
     if (this.appendMode) {
-      // --- append mode ---
       const shiftedLogs = newLogs.map(d => ({ ...d, tick: d.tick + this.tickOffset }));
       const isNewEpoch = newLogs[0].tick === 0 && this.fullData.length > 0;
 
-      if (isNewEpoch && this.includeEpochBoundaries) this.epochBoundaries.push(this.tickOffset);
+      if (isNewEpoch && this.includeEpochBoundaries) {
+        this.epochBoundaries.push(this.tickOffset);
+        // Insert null to break line between epochs
+        this.fullData.push(null);
+      }
 
       this.fullData = [...this.fullData, ...shiftedLogs];
-      this.tickOffset = d3.max(this.fullData, d => d.tick)! + 1;
-
-      // --- trim data to maxTicks (scrolling window) ---
-      const minTick = d3.max(this.fullData, d => d.tick)! - this.maxTicks;
-      this.fullData = this.fullData.filter(d => d.tick >= minTick);
-      this.epochBoundaries = this.epochBoundaries.filter(t => t >= minTick);
+      this.tickOffset = d3.max(this.fullData, d => d?.tick ?? 0)! + 1;
 
       dataToPlot = this.fullData;
     } else {
-      // --- re-render per epoch ---
       this.fullData = [...newLogs];
       this.epochBoundaries = [];
       this.tickOffset = 0;
       dataToPlot = newLogs;
     }
 
-    // Group by creature
-    const grouped = d3.group(dataToPlot, d => d.creature);
+    // Group by creature (filter nulls)
+    const grouped = d3.group(dataToPlot.filter(d => d !== null) as BattleLog[], d => d.creature);
 
-    // Update scales
-    this.x.domain([d3.min(dataToPlot, d => d.tick) || 0, d3.max(dataToPlot, d => d.tick) || 1]);
-    this.y.domain([0, d3.max(dataToPlot, d => d.hp) as number]).nice();
+    // Determine max tick for scrolling window
+    const maxTick = d3.max(this.fullData, d => d?.tick ?? 0) ?? 0;
+
+    // Set x-domain for scrolling window
+    if (this.appendMode && this.maxTicks > 0) {
+      this.x.domain([Math.max(0, maxTick - this.maxTicks), maxTick]);
+    } else {
+      this.x.domain([d3.min(dataToPlot, d => d?.tick ?? 0) ?? 0, maxTick]);
+    }
+
+    this.y.domain([0, d3.max(dataToPlot, d => d?.hp ?? 0) as number]).nice();
 
     // Update axes
     this.svg.select<SVGGElement>(".x-axis").call(d3.axisBottom(this.x));
@@ -116,6 +121,9 @@ export class D3XyGraphComponent implements OnInit, AfterViewInit {
       .data(Array.from(grouped), d => d[0]);
 
     creatures.exit().remove();
+
+    const xDomain = this.x.domain(); // [minTickVisible, maxTickVisible]
+
     creatures.enter()
       .append("path")
       .attr("class", "line")
@@ -123,7 +131,13 @@ export class D3XyGraphComponent implements OnInit, AfterViewInit {
       .attr("stroke-width", 2)
       .merge(creatures)
       .attr("stroke", d => this.color(d[0])!)
-      .attr("d", d => this.line(d[1]));
+      .attr("d", d => {
+        // Only include nulls and points within visible x-domain
+        const lineData: (BattleLog | null)[] = dataToPlot.filter(pt => 
+          pt === null || (pt.creature === d[0] && pt.tick >= xDomain[0] && pt.tick <= xDomain[1])
+        );
+        return this.line(lineData)!;
+      });
 
     // Update epoch separators
     const epochLines = this.svg.select<SVGGElement>("g.epoch-lines")
