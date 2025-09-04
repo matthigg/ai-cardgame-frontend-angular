@@ -45,7 +45,6 @@ export class D3XyGraphComponent implements OnInit, AfterViewInit {
 
   constructor() {
     effect(() => this.updateChart(this.logs()));
-    effect(() => this.updateChart(this.logs())); // also refresh when selectedStat changes
   }
 
   ngOnInit(): void {}
@@ -160,6 +159,8 @@ export class D3XyGraphComponent implements OnInit, AfterViewInit {
       .duration(200)
       .attr('x1', d => this.x(d as number))
       .attr('x2', d => this.x(d as number));
+
+    console.log('--- dataToPlot: ', dataToPlot);
   }
 
   setStat(stat: 'hp' | 'energy' | 'reward') {
