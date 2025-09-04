@@ -1,4 +1,4 @@
-export const mockData: any = [
+export const mockLogs: any = [
   {
     "epoch": 99,
     "tick": 0,

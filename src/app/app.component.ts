@@ -8,13 +8,12 @@ import { D3XyGraphComponent } from './components/d3-xy-graph/d3-xy-graph.compone
 
 @Component({
   selector: 'app-root',
-  // imports: [CommonModule, RouterOutlet],
   imports: [
     CommonModule, 
     // D3ChartComponent,
     D3XyGraphComponent,
+    // RouterOutlet,
   ],
-  // imports: [CommonModule],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })

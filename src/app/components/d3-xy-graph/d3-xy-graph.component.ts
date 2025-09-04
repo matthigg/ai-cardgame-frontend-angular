@@ -32,11 +32,12 @@ export class D3XyGraphComponent implements OnInit, AfterViewInit {
   private color = d3.scaleOrdinal<string>().range(["steelblue", "tomato"]);
 
   // === Toggle mode ===
-  private appendMode = true; // false = per-epoch re-render
-
+  private appendMode = true; 
+  
   // Persistent state for append mode
   private fullData: BattleLog[] = [];
   private epochBoundaries: number[] = [];
+  private includeEpochBoundaries = false;
   private tickOffset = 0;
 
   constructor() {
@@ -93,7 +94,7 @@ export class D3XyGraphComponent implements OnInit, AfterViewInit {
         tick: d.tick + this.tickOffset
       }));
 
-      if (isNewEpoch) {
+      if (isNewEpoch && this.includeEpochBoundaries) {
         this.epochBoundaries.push(this.tickOffset);
       }
 
