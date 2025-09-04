@@ -6,21 +6,26 @@ interface BattleLog {
   tick: number;
   creature: string;
   hp: number;
+  energy: number;
+  reward: number;
 }
 
 @Component({
   selector: 'app-d3-xy-graph',
   imports: [CommonModule],
   templateUrl: './d3-xy-graph.component.html',
-  styleUrl: './d3-xy-graph.component.scss'
+  styleUrls: ['./d3-xy-graph.component.scss']
 })
 export class D3XyGraphComponent implements OnInit, AfterViewInit {
   @ViewChild('chartContainer', { static: true }) chartContainer!: ElementRef;
 
   @Input() logs: WritableSignal<BattleLog[]> = signal<BattleLog[]>([]);
-  @Input() statusMessages: WritableSignal<string[]> = signal([]);
   @Input() maxTicks: number = 100;
   @Input() appendMode: boolean = true;
+  @Input() statusMessages: WritableSignal<string[]> = signal([]);
+
+  // Selected stat to plot
+  selectedStat: WritableSignal<'hp' | 'energy' | 'reward'> = signal('hp');
 
   private svgRoot!: d3.Selection<SVGSVGElement, unknown, null, undefined>;
   private svg!: d3.Selection<SVGGElement, unknown, null, undefined>;
@@ -31,7 +36,7 @@ export class D3XyGraphComponent implements OnInit, AfterViewInit {
   private x!: d3.ScaleLinear<number, number>;
   private y!: d3.ScaleLinear<number, number>;
   private line!: d3.Line<BattleLog | null>;
-  private color = d3.scaleOrdinal<string>().range(["steelblue", "tomato"]);
+  private color = d3.scaleOrdinal<string>().range(['steelblue', 'tomato']);
 
   private fullData: (BattleLog | null)[] = [];
   private epochBoundaries: number[] = [];
@@ -40,6 +45,7 @@ export class D3XyGraphComponent implements OnInit, AfterViewInit {
 
   constructor() {
     effect(() => this.updateChart(this.logs()));
+    effect(() => this.updateChart(this.logs())); // also refresh when selectedStat changes
   }
 
   ngOnInit(): void {}
@@ -50,12 +56,12 @@ export class D3XyGraphComponent implements OnInit, AfterViewInit {
 
   private createChart(): void {
     this.svgRoot = d3.select(this.chartContainer.nativeElement)
-      .append("svg")
-      .attr("width", this.width + this.margin.left + this.margin.right)
-      .attr("height", this.height + this.margin.top + this.margin.bottom);
+      .append('svg')
+      .attr('width', this.width + this.margin.left + this.margin.right)
+      .attr('height', this.height + this.margin.top + this.margin.bottom);
 
-    this.svg = this.svgRoot.append("g")
-      .attr("transform", `translate(${this.margin.left},${this.margin.top})`);
+    this.svg = this.svgRoot.append('g')
+      .attr('transform', `translate(${this.margin.left},${this.margin.top})`);
 
     this.x = d3.scaleLinear().range([0, this.width]);
     this.y = d3.scaleLinear().range([this.height, 0]);
@@ -63,11 +69,11 @@ export class D3XyGraphComponent implements OnInit, AfterViewInit {
     this.line = d3.line<BattleLog | null>()
       .defined(d => d !== null)
       .x(d => this.x(d!.tick))
-      .y(d => this.y(d!.hp));
+      .y(d => this.y(d![this.selectedStat()]));
 
-    this.svg.append("g").attr("class", "x-axis").attr("transform", `translate(0,${this.height})`);
-    this.svg.append("g").attr("class", "y-axis");
-    this.svg.append("g").attr("class", "epoch-lines");
+    this.svg.append('g').attr('class', 'x-axis').attr('transform', `translate(0,${this.height})`);
+    this.svg.append('g').attr('class', 'y-axis');
+    this.svg.append('g').attr('class', 'epoch-lines');
   }
 
   updateChart(newLogs: BattleLog[]): void {
@@ -103,12 +109,12 @@ export class D3XyGraphComponent implements OnInit, AfterViewInit {
       this.x.domain([d3.min(dataToPlot, d => d?.tick ?? 0) ?? 0, maxTick]);
     }
 
-    this.y.domain([0, d3.max(dataToPlot, d => d?.hp ?? 0) as number]).nice();
+    this.y.domain([0, d3.max(dataToPlot, d => d?.[this.selectedStat()] ?? 0) as number]).nice();
 
-    this.svg.select<SVGGElement>(".x-axis").call(d3.axisBottom(this.x));
-    this.svg.select<SVGGElement>(".y-axis").call(d3.axisLeft(this.y));
+    this.svg.select<SVGGElement>('.x-axis').call(d3.axisBottom(this.x));
+    this.svg.select<SVGGElement>('.y-axis').call(d3.axisLeft(this.y));
 
-    const creatures = this.svg.selectAll<SVGPathElement, [string, BattleLog[]]>("path.line")
+    const creatures = this.svg.selectAll<SVGPathElement, [string, BattleLog[]]>('path.line')
       .data(Array.from(grouped), d => d[0]);
 
     creatures.exit().remove();
@@ -116,36 +122,56 @@ export class D3XyGraphComponent implements OnInit, AfterViewInit {
     const xDomain = this.x.domain();
 
     creatures.enter()
-      .append("path")
-      .attr("class", "line")
-      .attr("fill", "none")
-      .attr("stroke-width", 2)
+      .append('path')
+      .attr('class', 'line')
+      .attr('fill', 'none')
+      .attr('stroke-width', 2)
       .merge(creatures)
-      .attr("stroke", d => this.color(d[0])!)
-      .attr("d", d => {
-        const lineData: (BattleLog | null)[] = dataToPlot.filter(pt =>
+      .attr('stroke', d => this.color(d[0])!)
+      .attr('d', d => {
+        const lineData: (BattleLog | null)[] = dataToPlot.filter(pt => 
           pt === null || (pt.creature === d[0] && pt.tick >= xDomain[0] && pt.tick <= xDomain[1])
         );
         return this.line(lineData)!;
       });
 
-    const visibleEpochLines = this.epochBoundaries.filter(tick => tick >= xDomain[0] && tick <= xDomain[1]);
+    const epochLines = this.svg.select<SVGGElement>('g.epoch-lines')
+      .selectAll<SVGLineElement, number>('line.epoch-line')
+      .data(this.appendMode ? this.epochBoundaries : []);
 
-    const epochLines = this.svg.select<SVGGElement>("g.epoch-lines")
-      .selectAll<SVGLineElement, number>("line.epoch-line")
-      .data(this.appendMode ? visibleEpochLines : []);
-
-    epochLines.exit().remove();
+    epochLines.exit()
+      .transition()
+      .duration(200)
+      .attr('x1', d => this.x(d as number))
+      .attr('x2', d => this.x(d as number))
+      .remove();
 
     epochLines.enter()
-      .append("line")
-      .attr("class", "epoch-line")
-      .attr("stroke", "gray")
-      .attr("stroke-dasharray", "4 4")
-      .attr("y1", 0)
-      .attr("y2", this.height)
+      .append('line')
+      .attr('class', 'epoch-line')
+      .attr('stroke', 'gray')
+      .attr('stroke-dasharray', '4 4')
+      .attr('y1', 0)
+      .attr('y2', this.height)
+      .attr('x1', d => this.x(d as number))
+      .attr('x2', d => this.x(d as number))
       .merge(epochLines)
-      .attr("x1", d => this.x(d))
-      .attr("x2", d => this.x(d));
+      .transition()
+      .duration(200)
+      .attr('x1', d => this.x(d as number))
+      .attr('x2', d => this.x(d as number));
+  }
+
+  setStat(stat: 'hp' | 'energy' | 'reward') {
+    this.selectedStat.set(stat);
+    this.line.y(d => this.y(d![stat])); // update line generator
+    this.updateChart(this.logs());
+  }
+
+  onStatChange(event: Event) {
+    const target = event.target as HTMLSelectElement | null;
+    if (target) {
+      this.setStat(target.value as 'hp' | 'energy' | 'reward');
+    }
   }
 }

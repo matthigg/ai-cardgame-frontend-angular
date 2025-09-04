@@ -1,4 +1,26 @@
+<br><br>
+<div>
+  <label for="stat-select">Select stat:</label>
+  <select id="stat-select" (change)="onStatChange($event)">
+    <option value="hp">HP</option>
+    <option value="energy">Energy</option>
+    <option value="reward">Reward</option>
+  </select>
+</div>
+
 <div #chartContainer class="chart-container"></div>
+
+
+
+
+
+
+
+
+
+
+
+
 
 <div class="status-panel">
   <div *ngFor="let msg of statusMessages()">{{ msg }}</div>
