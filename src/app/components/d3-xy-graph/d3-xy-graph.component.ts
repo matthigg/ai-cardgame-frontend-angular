@@ -2,15 +2,6 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, AfterViewInit, ElementRef, ViewChild, Input, effect, WritableSignal, signal } from '@angular/core';
 import * as d3 from 'd3';
 
-// d3.scaleLinear + d3.axisBottom/Left = classic x–y axes.
-// d3.line() = transforms your (tick, hp) points into an SVG path.
-// Grouping by creature lets you draw multiple lines.
-// d3.scaleOrdinal gives different colors for A and B.
-
-// Keep your chart initialized once (createChart).
-// When new logs arrive, call updateChart(newData).
-// D3 uses the data join pattern (.data(), .enter(), .exit()) to update paths instead of replacing the whole SVG.
-
 interface BattleLog {
   tick: number;
   creature: string;
@@ -26,7 +17,7 @@ interface BattleLog {
 export class D3XyGraphComponent implements OnInit, AfterViewInit {
   @ViewChild('chartContainer', { static: true }) chartContainer!: ElementRef;
 
-  @Input() logs: WritableSignal<any[]> = signal([]);
+  @Input() logs: WritableSignal<BattleLog[]> = signal<BattleLog[]>([]);
 
   private svgRoot!: d3.Selection<SVGSVGElement, unknown, null, undefined>;
   private svg!: d3.Selection<SVGGElement, unknown, null, undefined>;
@@ -39,15 +30,21 @@ export class D3XyGraphComponent implements OnInit, AfterViewInit {
   private line!: d3.Line<BattleLog>;
   private color = d3.scaleOrdinal<string>().range(["steelblue", "tomato"]);
 
+  // === Toggle mode ===
+  private appendMode = false; // ⬅️ switch this to false for per-epoch re-render
+
+  // Persistent state for append mode
+  private fullData: BattleLog[] = [];
+  private epochBoundaries: number[] = [];
+  private tickOffset = 0;
+
   constructor() {
     effect(() => {
       this.updateChart(this.logs());
     })
   }
 
-  ngOnInit(): void {
-    
-  }
+  ngOnInit(): void {}
 
   ngAfterViewInit(): void {
     this.createChart();
@@ -71,40 +68,85 @@ export class D3XyGraphComponent implements OnInit, AfterViewInit {
       .x(d => this.x(d.tick))
       .y(d => this.y(d.hp));
 
-    // Axes groups (empty for now, updated later)
+    // Axes groups
     this.svg.append("g").attr("class", "x-axis")
       .attr("transform", `translate(0,${this.height})`);
     this.svg.append("g").attr("class", "y-axis");
+
+    this.svg.append("g").attr("class", "epoch-lines");
   }
 
-  updateChart(data: BattleLog[]): void {
-    if (!data || data.length === 0) return;
+  updateChart(newLogs: BattleLog[]): void {
+    if (!newLogs || newLogs.length === 0) return;
 
-    const grouped = d3.group(data, d => d.creature);
+    let dataToPlot: BattleLog[] = [];
+
+    if (this.appendMode) {
+      // === Append mode ===
+      const shiftedLogs = newLogs.map(d => ({
+        ...d,
+        tick: d.tick + this.tickOffset
+      }));
+
+      if (this.fullData.length > 0) {
+        this.epochBoundaries.push(this.tickOffset);
+      }
+
+      this.fullData = [...this.fullData, ...shiftedLogs];
+      this.tickOffset = d3.max(this.fullData, d => d.tick)! + 1;
+
+      dataToPlot = this.fullData;
+    } else {
+      // === Re-render mode ===
+      this.fullData = [];
+      this.epochBoundaries = [];
+      this.tickOffset = 0;
+
+      dataToPlot = newLogs;
+    }
+
+    // Group by creature
+    const grouped = d3.group(dataToPlot, d => d.creature);
 
     // Update scales
-    this.x.domain(d3.extent(data, d => d.tick) as [number, number]);
-    this.y.domain([0, d3.max(data, d => d.hp) as number]).nice();
+    this.x.domain([0, d3.max(dataToPlot, d => d.tick) as number]);
+    this.y.domain([0, d3.max(dataToPlot, d => d.hp) as number]).nice();
 
     // Update axes
     this.svg.select<SVGGElement>(".x-axis").call(d3.axisBottom(this.x));
     this.svg.select<SVGGElement>(".y-axis").call(d3.axisLeft(this.y));
 
-    // JOIN + UPDATE paths
+    // === Update lines ===
     const creatures = this.svg.selectAll<SVGPathElement, [string, BattleLog[]]>("path.line")
       .data(Array.from(grouped), d => d[0]);
 
-    // EXIT old
     creatures.exit().remove();
 
-    // ENTER new
     creatures.enter()
       .append("path")
       .attr("class", "line")
       .attr("fill", "none")
       .attr("stroke-width", 2)
-      .merge(creatures) // MERGE with update selection
+      .merge(creatures)
       .attr("stroke", d => this.color(d[0])!)
       .attr("d", d => this.line(d[1]));
+
+    // === Update epoch separators (only in append mode) ===
+    const epochLines = this.svg.select<SVGGElement>("g.epoch-lines")
+      .selectAll<SVGLineElement, number>("line.epoch-line")
+      .data(this.appendMode ? this.epochBoundaries : []);
+
+    epochLines.exit().remove();
+
+    epochLines.enter()
+      .append("line")
+      .attr("class", "epoch-line")
+      .attr("stroke", "gray")
+      .attr("stroke-dasharray", "4 4")
+      .attr("y1", 0)
+      .attr("y2", this.height)
+      .merge(epochLines)
+      .attr("x1", d => this.x(d))
+      .attr("x2", d => this.x(d));
   }
 }
