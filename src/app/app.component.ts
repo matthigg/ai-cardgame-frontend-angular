@@ -20,7 +20,8 @@ import { D3XyGraphComponent } from './components/d3-xy-graph/d3-xy-graph.compone
 export class AppComponent {
   logs: WritableSignal<any> = signal([])
 
-  public statusMessages: string[] = [];
+  public statusMessages: WritableSignal<string[]> = signal([]);
+  private statusMessageLength = 5;
 
   constructor(private battleService: BattleService) {}
 
@@ -34,11 +35,20 @@ export class AppComponent {
     eventSource.onmessage = (event) => {
       const data = JSON.parse(event.data);
 
+      const now = new Date();
+      const timestamp = now.toLocaleTimeString('en-US', { hour12: false }); // HH:MM:SS format
+
       if (Array.isArray(data)) {
         this.logs.set(data);  // only BattleLog arrays go to the chart
       } else if (data.status) {
-        this.statusMessages.push(`Status: ${data.status}`);
-        console.log("Training status:", data.status);
+        const statusMessagesValue = this.statusMessages();
+        statusMessagesValue.push(`[${timestamp}] Status: ${data.status}`);
+        this.statusMessages.set(statusMessagesValue);
+
+        if (this.statusMessages().length > this.statusMessageLength) {
+          const x = statusMessagesValue.slice(this.statusMessages().length - this.statusMessageLength);
+          this.statusMessages.set(x);
+        }
 
         if (data.status === "completed") {
           eventSource.close();

@@ -18,9 +18,10 @@ export class D3XyGraphComponent implements OnInit, AfterViewInit {
   @ViewChild('chartContainer', { static: true }) chartContainer!: ElementRef;
 
   @Input() logs: WritableSignal<BattleLog[]> = signal<BattleLog[]>([]);
-  @Input() statusMessages: string[] = [];
-  @Input() maxTicks: number = 100; // max ticks to display (scrolling window)
-  @Input() appendMode: boolean = true; // toggle append vs full re-render
+  @Input() statusMessages: WritableSignal<string[]> = signal([]);
+  @Input() maxTicks: number = 100; // max ticks to display
+  @Input() appendMode: boolean = true; // append vs full re-render
+  @Input() statusMessagesLength: number = 10; // max messages to keep
 
   private svgRoot!: d3.Selection<SVGSVGElement, unknown, null, undefined>;
   private svg!: d3.Selection<SVGGElement, unknown, null, undefined>;
@@ -76,20 +77,18 @@ export class D3XyGraphComponent implements OnInit, AfterViewInit {
     let dataToPlot: BattleLog[] = [];
 
     if (this.appendMode) {
-      // --- append new logs with tick offset ---
+      // --- append mode ---
       const shiftedLogs = newLogs.map(d => ({ ...d, tick: d.tick + this.tickOffset }));
-
       const isNewEpoch = newLogs[0].tick === 0 && this.fullData.length > 0;
+
       if (isNewEpoch && this.includeEpochBoundaries) this.epochBoundaries.push(this.tickOffset);
 
       this.fullData = [...this.fullData, ...shiftedLogs];
       this.tickOffset = d3.max(this.fullData, d => d.tick)! + 1;
 
-      // --- trim old data to enforce maxTicks ---
-      const minTick = this.fullData.length > 0 ? d3.max(this.fullData, d => d.tick)! - this.maxTicks : 0;
+      // --- trim data to maxTicks (scrolling window) ---
+      const minTick = d3.max(this.fullData, d => d.tick)! - this.maxTicks;
       this.fullData = this.fullData.filter(d => d.tick >= minTick);
-
-      // Remove epoch boundaries outside the window
       this.epochBoundaries = this.epochBoundaries.filter(t => t >= minTick);
 
       dataToPlot = this.fullData;
