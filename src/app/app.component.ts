@@ -1,13 +1,15 @@
 import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { BattleService } from './services/battle.service';
+import { BattleService } from './services/battle/battle.service';
 import { CommonModule } from '@angular/common';
 import { take } from 'rxjs';
+import { D3ChartComponent } from './d3-chart/d3-chart.component';
 
 @Component({
   selector: 'app-root',
   // imports: [CommonModule, RouterOutlet],
-  imports: [CommonModule],
+  imports: [CommonModule, D3ChartComponent],
+  // imports: [CommonModule],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
