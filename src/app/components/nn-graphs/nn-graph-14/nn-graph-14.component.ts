@@ -53,6 +53,9 @@ export const easingFunctions: { [key: string]: (t: number) => number } = {
       <button (click)="toggleShowPulses()">
         {{ showPulses ? 'Hide' : 'Show' }} Pulses
       </button>
+      <button (click)="togglePulseDirection()">
+        {{ passDirection }} Pulse Direction
+      </button>
     </div>
     <svg #svgRef></svg>
   `,
@@ -72,7 +75,7 @@ export class NnGraph14Component implements OnInit {
 
   @Input({ required: true }) activations!: WritableSignal<{ epoch: number, activations: number[][] } | null>;
   @Input() haloRadius = 12;
-  @Input() passDirection: 'forward' | 'backward' | 'none' = 'backward';
+  @Input() passDirection: 'forward' | 'backward' | 'none' = 'forward';
   @Input() showActivation = false;
   @Input() weightFontColor = 'white';
   @Input() showPulses = false;
@@ -111,6 +114,12 @@ export class NnGraph14Component implements OnInit {
   toggleShowPulses(): void {
     this.showPulses = !this.showPulses;
     this.updateGraph([]);
+  }
+
+  togglePulseDirection(): void {
+    this.passDirection === 'forward' 
+      ? this.passDirection = 'backward' 
+      : this.passDirection = 'forward';
   }
 
   private buildStaticLayout(): void {
