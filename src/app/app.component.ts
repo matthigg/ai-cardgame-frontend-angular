@@ -3,17 +3,39 @@ import { RouterOutlet } from '@angular/router';
 import { BattleService } from './services/battle/battle.service';
 import { CommonModule } from '@angular/common';
 import { take } from 'rxjs';
-import { D3ChartComponent } from './components/d3-chart/d3-chart.component';
 import { D3XyGraphComponent } from './components/d3-xy-graph/d3-xy-graph.component';
 import { D3BarChartComponent } from './components/d3-bar-chart/d3-bar-chart.component';
+import { NnGraphComponent } from './components/nn-graphs/nn-graph/nn-graph.component';
+import { NnGraph2Component } from './components/nn-graphs/nn-graph-2/nn-graph-2.component';
+import { NnGraph3Component } from './components/nn-graphs/nn-graph-3/nn-graph-3.component';
+import { NnGraph4Component } from './components/nn-graphs/nn-graph-4/nn-graph-4.component';
+import { NnGraph5Component } from './components/nn-graphs/nn-graph-5/nn-graph-5.component';
+import { NnGraph6Component } from './components/nn-graphs/nn-graph-6/nn-graph-6.component';
+import { NnGraph7Component } from './components/nn-graphs/nn-graph-7/nn-graph-7.component';
+import { NnGraph8Component } from './components/nn-graphs/nn-graph-8/nn-graph-8.component';
+import { NnGraph9Component } from './components/nn-graphs/nn-graph-9/nn-graph-9.component';
+import { NnGraph10Component } from './components/nn-graphs/nn-graph-10/nn-graph-10.component';
+import { NnGraph11Component } from './components/nn-graphs/nn-graph-11/nn-graph-11.component';
+import { NnGraph12Component } from './components/nn-graphs/nn-graph-12/nn-graph-12.component';
 
 @Component({
   selector: 'app-root',
   imports: [
     CommonModule, 
-    // D3ChartComponent,
     D3BarChartComponent,
     D3XyGraphComponent,
+    NnGraphComponent,
+    NnGraph2Component,
+    NnGraph3Component,
+    NnGraph4Component,
+    NnGraph5Component,
+    NnGraph6Component,
+    NnGraph7Component,
+    NnGraph8Component,
+    NnGraph9Component,
+    NnGraph10Component,
+    NnGraph11Component,
+    NnGraph12Component,
     // RouterOutlet,
   ],
   templateUrl: './app.component.html',
@@ -40,7 +62,7 @@ export class AppComponent {
       const data = JSON.parse(event.data);
       this.handleStatusMessages(data, eventSource);
 
-      console.log('--- data: ', data);
+      // console.log('--- data: ', data);
 
     if (data.status === "summary" && data.summary) {
       this.summaryData.set(data.summary); // signal to update your bar chart
