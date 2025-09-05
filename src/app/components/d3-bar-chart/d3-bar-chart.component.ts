@@ -2,14 +2,7 @@ import { Component, Input, OnInit, OnChanges, SimpleChanges, ElementRef, ViewChi
 import * as d3 from 'd3';
 import { BattleService } from '../../services/battle/battle.service';
 import { take } from 'rxjs';
-
-interface CreatureStats {
-  name: string;
-  totalWins: number;
-  avgWins: number;
-  totalEpochs: number;
-  stats: Record<string, number>;
-}
+import { CreatureStats } from '../../shared/creature.model';
 
 @Component({
   selector: 'app-d3-bar-chart',

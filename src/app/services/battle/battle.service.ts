@@ -14,10 +14,6 @@ export class BattleService {
     return this.http.get(`${this.apiUrl}/train`);
   }
 
-  getTrainingStream(): EventSource {
-    return new EventSource(`${this.apiUrl}/training-stream`);
-  }
-
   getSummary(): Observable<any> {
     return this.http.get(`${this.apiUrl}/summary`);
   }
@@ -25,5 +21,4 @@ export class BattleService {
   getCreatureGraph(creature: 'A' | 'B'): Observable<any> {
     return this.http.get(`${this.apiUrl}/nn-graph/${creature}`);
   }
-
 }

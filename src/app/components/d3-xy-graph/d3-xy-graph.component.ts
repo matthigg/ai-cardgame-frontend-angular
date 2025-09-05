@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, AfterViewInit, ElementRef, ViewChild, Input, effect, WritableSignal, signal } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ElementRef, ViewChild, Input, effect, WritableSignal, signal, InputSignal } from '@angular/core';
 import * as d3 from 'd3';
+import { CreatureStats } from '../../shared/creature.model';
 
 interface BattleLog {
   tick: number;
@@ -23,6 +24,8 @@ export class D3XyGraphComponent implements OnInit, AfterViewInit {
   @Input() maxTicks: number = 100;
   @Input() appendMode: boolean = true;
   @Input() statusMessages: WritableSignal<string[]> = signal([]);
+  // @Input({ required: true }) summaryData!: InputSignal<Record<string, CreatureStats> | null>;
+  @Input({ required: true }) summaryData!: WritableSignal<any>;
 
   // Selected stat to plot
   selectedStat: WritableSignal<'hp' | 'energy' | 'reward'> = signal('hp');
@@ -45,6 +48,10 @@ export class D3XyGraphComponent implements OnInit, AfterViewInit {
 
   constructor() {
     effect(() => this.updateChart(this.logs()));
+    effect(() => {
+      this.updateChart(this.summaryData())
+      console.log('--- this.summaryData(): ', this.summaryData());
+    });
   }
 
   ngOnInit(): void {}
