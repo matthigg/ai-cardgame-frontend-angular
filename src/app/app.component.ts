@@ -4,8 +4,7 @@ import { take } from 'rxjs';
 import { BattleService } from './services/battle/battle.service';
 import { D3XyGraphComponent } from './components/d3-xy-graph/d3-xy-graph.component';
 import { D3BarChartComponent } from './components/d3-bar-chart/d3-bar-chart.component';
-import { NnGraph12Component } from './components/nn-graphs/nn-graph-12/nn-graph-12.component';
-import { NnGraph13Component } from './components/nn-graphs/nn-graph-13/nn-graph-13.component';
+import { NnGraph14Component } from './components/nn-graphs/nn-graph-14/nn-graph-14.component';
 
 @Component({
   selector: 'app-root',
@@ -13,7 +12,7 @@ import { NnGraph13Component } from './components/nn-graphs/nn-graph-13/nn-graph-
     CommonModule,
     D3BarChartComponent,
     D3XyGraphComponent,
-    NnGraph13Component
+    NnGraph14Component
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
