@@ -71,7 +71,6 @@ export class NnGraph14Component implements OnInit {
   @ViewChild('svgRef', { static: true }) svgRef!: ElementRef<SVGSVGElement>;
 
   @Input({ required: true }) activations!: WritableSignal<{ epoch: number, activations: number[][] } | null>;
-
   @Input() haloRadius = 12;
   @Input() passDirection: 'forward' | 'backward' | 'none' = 'backward';
   @Input() showActivation = false;
@@ -95,9 +94,7 @@ export class NnGraph14Component implements OnInit {
   constructor() {
     effect(() => {
       const data = this.activations();
-      if (data) {
-        this.updateGraph(data.activations, data.epoch);
-      }
+      if (data) this.updateGraph(data.activations, data.epoch);
     });
   }
 
@@ -127,13 +124,7 @@ export class NnGraph14Component implements OnInit {
     layers.forEach((count, layerIndex) => {
       const yGap = height / (count + 1);
       for (let i = 0; i < count; i++) {
-        this.nodes.push({
-          layer: layerIndex,
-          index: i,
-          x: (layerIndex + 1) * layerXGap,
-          y: (i + 1) * yGap,
-          activation: 0
-        });
+        this.nodes.push({ layer: layerIndex, index: i, x: (layerIndex + 1) * layerXGap, y: (i + 1) * yGap, activation: 0 });
       }
     });
 
@@ -141,11 +132,7 @@ export class NnGraph14Component implements OnInit {
     for (let l = 0; l < layers.length - 1; l++) {
       const fromLayer = this.nodes.filter(n => n.layer === l);
       const toLayer = this.nodes.filter(n => n.layer === l + 1);
-      fromLayer.forEach(src => {
-        toLayer.forEach(tgt => {
-          this.links.push({ source: src, target: tgt, weight: Math.random() * 2 - 1 });
-        });
-      });
+      fromLayer.forEach(src => toLayer.forEach(tgt => this.links.push({ source: src, target: tgt, weight: Math.random() * 2 - 1 })));
     }
 
     this.updateGraph([]);
@@ -156,12 +143,7 @@ export class NnGraph14Component implements OnInit {
       activations.forEach((layer, l) => {
         layer.forEach((act, i) => {
           const node = this.nodes.find(n => n.layer === l && n.index === i);
-          if (node) {
-            const value = Array.isArray(act)
-              ? d3.mean(act as number[]) ?? 0
-              : (act as number);
-            node.activation = value;
-          }
+          if (node) node.activation = Array.isArray(act) ? d3.mean(act as number[]) ?? 0 : act as number;
         });
       });
     }
@@ -169,35 +151,6 @@ export class NnGraph14Component implements OnInit {
     const weightColorScale = d3.scaleLinear<string>()
       .domain([-1, 0, 1])
       .range(['tomato', 'cyan', 'steelblue']);
-
-    // --- PERSISTENT PULSES ---
-    if (this.showPulses && this.passDirection !== 'none' && epoch !== undefined) {
-      this.links.forEach(d => {
-        const pulseColor = weightColorScale(d.weight);
-        const forward = this.passDirection === 'forward';
-        const xStart = forward ? d.source.x : d.target.x;
-        const yStart = forward ? d.source.y : d.target.y;
-        const xEnd   = forward ? d.target.x : d.source.x;
-        const yEnd   = forward ? d.target.y : d.source.y;
-        const act = forward ? Math.max(0, d.source.activation) : Math.max(0, d.target.activation);
-
-        const pulse = this.svg.append('circle')
-          .attr('class', 'pulse')
-          .attr('cx', xStart)
-          .attr('cy', yStart)
-          .attr('r', 3 + 4 * act)
-          .attr('fill', pulseColor)
-          .attr('opacity', 0.9);
-
-        pulse.transition()
-          .duration(this.pulseDuration)
-          .ease(this.easeType)
-          .attr('cx', xEnd)
-          .attr('cy', yEnd)
-          .attr('opacity', 0)
-          .remove(); // remove only after reaching the end
-      });
-    }
 
     // LINKS
     const linkSel = this.svg.selectAll<SVGLineElement, Link>('.link')
@@ -218,6 +171,11 @@ export class NnGraph14Component implements OnInit {
       selection.transition()
         .duration(this.easeDuration)
         .ease(this.easeType)
+        .delay(d => {
+          if (this.passDirection === 'forward') return d.source.layer * 100;
+          if (this.passDirection === 'backward') return (this.nodes[this.nodes.length - 1].layer - d.source.layer) * 100;
+          return 0;
+        })
         .attr('stroke-width', d => 1 + Math.abs(d.source.activation - d.target.activation) * this.linkPulseScale)
         .attr('opacity', d => Math.abs(d.source.activation - d.target.activation) * this.linkPulseOpacity);
     };
@@ -226,13 +184,45 @@ export class NnGraph14Component implements OnInit {
     linkSel.call(updateLinkTransition);
     linkSel.exit().remove();
 
-    // NODES
+    // PULSES
+    if (this.showPulses && this.passDirection !== 'none' && epoch !== undefined) {
+      this.links.forEach(d => {
+        const forward = this.passDirection === 'forward';
+        const xStart = forward ? d.source.x : d.target.x;
+        const yStart = forward ? d.source.y : d.target.y;
+        const xEnd = forward ? d.target.x : d.source.x;
+        const yEnd = forward ? d.target.y : d.source.y;
+        const act = forward ? Math.max(0, d.source.activation) : Math.max(0, d.target.activation);
+        const pulseColor = weightColorScale(d.weight);
+
+        this.svg.append('circle')
+          .attr('class', 'pulse')
+          .attr('cx', xStart)
+          .attr('cy', yStart)
+          .attr('r', 3 + 4 * act)
+          .attr('fill', pulseColor)
+          .attr('opacity', 0.9)
+          .transition()
+          .duration(this.pulseDuration)
+          .ease(this.easeType)
+          .attr('cx', xEnd)
+          .attr('cy', yEnd)
+          .attr('opacity', 0)
+          .remove();
+      });
+    }
+
+    // NODES + HALO
     const nodeGroup = this.svg.selectAll<SVGGElement, Node>('.node-group')
       .data(this.nodes, d => `${d.layer}-${d.index}`);
 
-    const nodeEnter = nodeGroup.enter()
-      .append('g')
-      .attr('class', 'node-group');
+    const nodeEnter = nodeGroup.enter().append('g').attr('class', 'node-group');
+
+    nodeEnter.append('circle')
+      .attr('class', 'halo')
+      .attr('r', 0)
+      .attr('cx', d => d.x)
+      .attr('cy', d => d.y);
 
     nodeEnter.append('circle')
       .attr('class', 'node')
@@ -241,10 +231,23 @@ export class NnGraph14Component implements OnInit {
       .attr('cy', d => d.y);
 
     const nodeMerge = nodeEnter.merge(nodeGroup as any);
+
+    nodeMerge.select<SVGCircleElement>('.halo')
+      .transition().duration(this.easeDuration).ease(this.easeType)
+      .attr('r', d => d.activation > 0 ? this.haloRadius * d.activation : 0)
+      .attr('opacity', d => d.activation > 0.1 ? 1 : 0)
+      .attr('fill', d => {
+        const linked = this.links.find(l => l.source === d || l.target === d);
+        return linked ? weightColorScale(linked.weight) : 'white';
+      });
+
     nodeMerge.select<SVGCircleElement>('.node')
       .transition().duration(this.easeDuration).ease(this.easeType)
       .attr('r', d => 5 + d.activation * 5)
-      .attr('fill', d => weightColorScale(this.links.find(l => l.source === d || l.target === d)?.weight ?? 0));
+      .attr('fill', d => {
+        const linked = this.links.find(l => l.source === d || l.target === d);
+        return linked ? weightColorScale(linked.weight) : 'white';
+      });
 
     nodeGroup.exit().remove();
   }
