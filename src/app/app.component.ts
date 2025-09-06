@@ -3,22 +3,23 @@ import { CommonModule } from '@angular/common';
 import { take } from 'rxjs';
 import { BattleService } from './services/battle/battle.service';
 import { D3BarChartComponent } from './components/d3-bar-chart/d3-bar-chart.component';
-import { NnGraph15Component } from './components/nn-graphs/nn-graph-15/nn-graph-15.component';
 import { NnGraph16Component } from './components/nn-graphs/nn-graph-16/nn-graph-16.component';
+import { NnGraph17Component } from './components/nn-graphs/nn-graph-17/nn-graph-17.component';
+import { Activations } from './shared/models/activations.model';
 
 @Component({
   selector: 'app-root',
   imports: [
     CommonModule,
     D3BarChartComponent,
-    // NnGraph15Component,
     NnGraph16Component,
+    NnGraph17Component,
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
-  activations: WritableSignal<{ creature: string, epoch: number, activations: number[][] } | null> = signal(null);
+  activations: WritableSignal<Activations | null> = signal(null);
   logs: WritableSignal<any> = signal([]);
   summaryData: WritableSignal<any> = signal(null);
 
@@ -40,28 +41,32 @@ export class AppComponent {
   }
 
   // ------------------ Playback ------------------
-async playActivations(creature: 'A' | 'B', speed = 200) {
-  // Fetch activations history from the backend
-  const data = await this.battleService.getCreatureGraph(creature).toPromise();
+  async playActivations(creature: 'A' | 'B', speed = 200) {
+    // Fetch activations history from the backend
+    const data = await this.battleService.getCreatureGraph(creature).toPromise();
 
-  console.log('--- pb data: ', data);
-  
-  const history = data.activations_history || [];
-
-  for (let epoch = 0; epoch < history.length; epoch++) {
-    const epochData = history[epoch];
+    console.log('--- pb data: ', data);
     
-    // Extract layers array for this epoch
-    // Expected format: { name: 'B', epoch: 0, layers: [[...], [...], ...] }
-    const activations = epochData.layers || [];
-    
-    // Set the WritableSignal for the NN graph
-    this.activations.set({ creature, epoch, activations });
+    const history = data.activations_history || [];
 
-    // Optional delay for playback speed
-    await new Promise(resolve => setTimeout(resolve, speed));
+    for (let epoch = 0; epoch < history.length; epoch++) {
+
+      console.log('--- epoch: ', epoch);
+      
+      const epochData = history[epoch];
+      const lastEpoch = epoch === history.length - 1;
+      
+      // Extract layers array for this epoch
+      // Expected format: { name: 'B', epoch: 0, layers: [[...], [...], ...] }
+      const activations = epochData.layers || [];
+      
+      // Set the WritableSignal for the NN graph
+      this.activations.set({ creature, epoch, lastEpoch, activations });
+
+      // Optional delay for playback speed
+      await new Promise(resolve => setTimeout(resolve, speed));
+    }
   }
-}
 
 
 

@@ -1,7 +1,6 @@
 import { Component, effect, ElementRef, Input, OnInit, ViewChild, WritableSignal, AfterViewInit } from '@angular/core';
 import * as d3 from 'd3';
 import { BattleService } from '../../../services/battle/battle.service';
-import { Activations } from '../../../shared/models/activations.model';
 
 interface Node {
   layer: number;
@@ -18,7 +17,7 @@ interface Link {
 }
 
 @Component({
-  selector: 'app-nn-graph-16',
+  selector: 'app-nn-graph-17',
   template: `
     <div style="margin-bottom: 8px;">
       <button (click)="toggleShowWeights()">
@@ -44,9 +43,9 @@ interface Link {
     }
   `]
 })
-export class NnGraph16Component implements OnInit, AfterViewInit {
+export class NnGraph17Component implements OnInit, AfterViewInit {
   @ViewChild('svgRef', { static: true }) svgRef!: ElementRef<SVGSVGElement>;
-  @Input({ required: true }) activations!: WritableSignal<Activations | null>;
+  @Input({ required: true }) activations!: WritableSignal<{ creature: string, epoch: number, activations: number[][] } | null>;
   @Input() haloRadius = 12;
   @Input() passDirection: 'forward' | 'backward' | 'none' = 'forward';
   @Input() showActivation = false;
@@ -68,22 +67,16 @@ export class NnGraph16Component implements OnInit, AfterViewInit {
     effect(() => {
       const data = this.activations();
       if (!data?.activations?.length) {
-        this.clearGraph(1);
+        this.clearGraph();
         return;
       }
 
       if (this.currentCreature !== data.creature) {
-        // Fully re-render on creature switch
-        this.clearGraph(2);
-        // console.log('--- data: ', data);
         this.currentCreature = data.creature;
-
-        const layout = this.buildDynamicLayoutFromActivations(data.activations);
-        this.updateGraph(data.activations, data.epoch, data.creature, layout);
+        this.clearGraph();
+        this.renderFullGraph(data.activations, data.epoch, data.creature);
       } else {
-        // Same creature: smooth update
-        const layout = this.buildDynamicLayoutFromActivations(data.activations);
-        this.updateGraph(data.activations, data.epoch, data.creature, layout);
+        this.updateActivations(data.activations, data.epoch);
       }
     });
   }
@@ -98,29 +91,43 @@ export class NnGraph16Component implements OnInit, AfterViewInit {
   toggleShowWeights(): void {
     this.showWeights = !this.showWeights;
     if (this.currentCreature) {
-      const layout = this.buildDynamicLayoutFromActivations(this.activations()?.activations || []);
-      this.updateGraph(this.activations()?.activations || [], undefined, this.currentCreature, layout);
+      this.updateActivations([], undefined);
     }
   }
 
   toggleShowPulses(): void {
     this.showPulses = !this.showPulses;
     if (this.currentCreature) {
-      const layout = this.buildDynamicLayoutFromActivations(this.activations()?.activations || []);
-      this.updateGraph(this.activations()?.activations || [], undefined, this.currentCreature, layout);
+      this.updateActivations([], undefined);
     }
   }
+
+  // toggleShowWeights(): void {
+  //   this.showWeights = !this.showWeights;
+  //   if (this.currentCreature) {
+  //     const layout = this.buildDynamicLayoutFromActivations(this.activations()?.activations || []);
+  //     this.updateGraph(this.activations()?.activations || [], undefined, this.currentCreature, layout);
+  //   }
+  // }
+
+  // toggleShowPulses(): void {
+  //   this.showPulses = !this.showPulses;
+  //   if (this.currentCreature) {
+  //     const layout = this.buildDynamicLayoutFromActivations(this.activations()?.activations || []);
+  //     this.updateGraph(this.activations()?.activations || [], undefined, this.currentCreature, layout);
+  //   }
+  // }
 
   togglePulseDirection(): void {
     this.passDirection = this.passDirection === 'forward' ? 'backward' : 'forward';
   }
 
-  private clearGraph(number: number): void {
-    // console.log('--- number: ', number);
+  private clearGraph(): void {
+    console.log('--- clear graph B ---');
     this.svg.selectAll('*').remove();
   }
 
-  private buildDynamicLayoutFromActivations(activations: number[][]) {
+  private renderFullGraph(activations: number[][], epoch: number, creature: string) {
     const width = this.svgRef.nativeElement.clientWidth;
     const height = this.svgRef.nativeElement.clientHeight;
 
@@ -149,6 +156,7 @@ export class NnGraph16Component implements OnInit, AfterViewInit {
       layerMapping.push(mapping);
     });
 
+    // Links
     for (let l = 0; l < layerMapping.length - 1; l++) {
       const fromLayer = nodes.filter(n => n.layer === l);
       const toLayer = nodes.filter(n => n.layer === l + 1);
@@ -159,14 +167,63 @@ export class NnGraph16Component implements OnInit, AfterViewInit {
       })));
     }
 
-    return { nodes, links, layerMapping };
+    const weightColorScale = d3.scaleLinear<string>()
+      .domain([-1, 0, 1])
+      .range(['steelblue', 'cyan', 'tomato']);
+
+    // Render links
+    this.svg.selectAll<SVGLineElement, Link>('.link')
+      .data(links)
+      .enter()
+      .append('line')
+      .attr('class', 'link')
+      .attr('x1', d => d.source.x)
+      .attr('y1', d => d.source.y)
+      .attr('x2', d => d.target.x)
+      .attr('y2', d => d.target.y)
+      .attr('stroke', d => weightColorScale(d.weight))
+      .attr('stroke-width', 1)
+      .attr('opacity', 1);
+
+    // Render nodes
+    const nodeGroup = this.svg.selectAll<SVGGElement, Node>('.node-group')
+      .data(nodes)
+      .enter()
+      .append('g')
+      .attr('class', 'node-group');
+
+    nodeGroup.append('circle')
+      .attr('class', 'halo')
+      .attr('cx', d => d.x)
+      .attr('cy', d => d.y)
+      .attr('r', 0)
+      .attr('opacity', 0);
+
+    nodeGroup.append('circle')
+      .attr('class', 'node')
+      .attr('cx', d => d.x)
+      .attr('cy', d => d.y)
+      .attr('r', 5)
+      .attr('opacity', 1)
+      .attr('fill', 'white');
+
+    // Store for updating activations
+    this._currentNodes = nodes;
+    this._currentLinks = links;
+    this._currentLayerMapping = layerMapping;
   }
 
-  private updateGraph(activations: number[][], epoch?: number, creature?: string, layout?: { nodes: Node[], links: Link[], layerMapping: number[][][] }) {
-    if (!layout) return;
-    const { nodes, links, layerMapping } = layout;
+  private _currentNodes: Node[] = [];
+  private _currentLinks: Link[] = [];
+  private _currentLayerMapping: number[][][] = [];
 
-    // Update node activations
+  private updateActivations(activations: number[][], epoch?: number) {
+    const nodes = this._currentNodes;
+    const links = this._currentLinks;
+    const layerMapping = this._currentLayerMapping;
+
+    if (!nodes.length || !links.length) return;
+
     if (activations.length > 0) {
       activations.forEach((layer: number[], l: number) => {
         const mapping = layerMapping[l];
@@ -181,69 +238,20 @@ export class NnGraph16Component implements OnInit, AfterViewInit {
       .domain([-1, 0, 1])
       .range(['steelblue', 'cyan', 'tomato']);
 
-    // Links
+    // Update links
     const linkSel = this.svg.selectAll<SVGLineElement, Link>('.link')
-      .data(links, d => `${d.source.layer}-${d.source.index}-${d.target.layer}-${d.target.index}`);
+      .data(links);
 
-    linkSel.enter()
-      .append('line')
-      .attr('class', 'link')
-      .attr('x1', d => d.source.x)
-      .attr('y1', d => d.source.y)
-      .attr('x2', d => d.target.x)
-      .attr('y2', d => d.target.y)
-      .attr('stroke', d => weightColorScale(d.weight))
-      .attr('stroke-width', 1)
-      .attr('opacity', 0)
-      .merge(linkSel)
-      .transition()
-      .duration(this.easeDuration)
-      .ease(this.easeType)
+    linkSel
       .attr('stroke-width', d => 1 + Math.abs(d.source.activation - d.target.activation) * this.linkPulseScale)
-      .attr('opacity', d => Math.abs(d.source.activation - d.target.activation) * this.linkPulseOpacity);
+      .attr('opacity', d => Math.abs(d.source.activation - d.target.activation) * this.linkPulseOpacity)
+      .attr('stroke', d => weightColorScale(d.weight));
 
-    linkSel.exit().remove();
-
-    // Pulses
-    if (this.showPulses && this.passDirection !== 'none' && epoch !== undefined) {
-      links.forEach(d => {
-        const forward = this.passDirection === 'forward';
-        const xStart = forward ? d.source.x : d.target.x;
-        const yStart = forward ? d.source.y : d.target.y;
-        const xEnd = forward ? d.target.x : d.source.x;
-        const yEnd = forward ? d.target.y : d.source.y;
-        const act = forward ? Math.max(0, d.source.activation) : Math.max(0, d.target.activation);
-        const pulseColor = weightColorScale(d.weight);
-
-        this.svg.append('circle')
-          .attr('class', 'pulse')
-          .attr('cx', xStart)
-          .attr('cy', yStart)
-          .attr('r', 3 + 4 * act)
-          .attr('fill', pulseColor)
-          .attr('opacity', 0.9)
-          .transition()
-          .duration(this.pulseDuration)
-          .ease(this.easeType)
-          .attr('cx', xEnd)
-          .attr('cy', yEnd)
-          .attr('opacity', 0)
-          .remove();
-      });
-    }
-
-    // Nodes
+    // Update nodes
     const nodeGroup = this.svg.selectAll<SVGGElement, Node>('.node-group')
-      .data(nodes, d => `${d.layer}-${d.index}`);
+      .data(nodes);
 
-    const nodeEnter = nodeGroup.enter().append('g').attr('class', 'node-group');
-    nodeEnter.append('circle').attr('class', 'halo').attr('r', 0).attr('cx', d => d.x).attr('cy', d => d.y);
-    nodeEnter.append('circle').attr('class', 'node').attr('r', 5).attr('cx', d => d.x).attr('cy', d => d.y);
-
-    const nodeMerge = nodeEnter.merge(nodeGroup as any);
-
-    nodeMerge.select<SVGCircleElement>('.halo')
-      .transition().duration(this.easeDuration).ease(this.easeType)
+    nodeGroup.select<SVGCircleElement>('.halo')
       .attr('r', d => d.activation > 0 ? this.haloRadius * d.activation : 0)
       .attr('opacity', d => d.activation > 0.1 ? 1 : 0)
       .attr('fill', d => {
@@ -251,14 +259,11 @@ export class NnGraph16Component implements OnInit, AfterViewInit {
         return linked ? weightColorScale(linked.weight) : 'white';
       });
 
-    nodeMerge.select<SVGCircleElement>('.node')
-      .transition().duration(this.easeDuration).ease(this.easeType)
+    nodeGroup.select<SVGCircleElement>('.node')
       .attr('r', d => 5 + d.activation * 5)
       .attr('fill', d => {
         const linked = links.find(l => l.source === d || l.target === d);
         return linked ? weightColorScale(linked.weight) : 'white';
       });
-
-    nodeGroup.exit().remove();
   }
 }

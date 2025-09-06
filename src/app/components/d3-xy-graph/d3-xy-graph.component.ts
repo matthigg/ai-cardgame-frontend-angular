@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, AfterViewInit, ElementRef, ViewChild, Input, effect, WritableSignal, signal, InputSignal } from '@angular/core';
 import * as d3 from 'd3';
-import { CreatureStats } from '../../shared/creature.model';
+import { CreatureStats } from '../../shared/models/creature.model';
 
 interface BattleLog {
   tick: number;
