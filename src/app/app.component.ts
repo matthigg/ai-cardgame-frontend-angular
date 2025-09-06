@@ -2,9 +2,7 @@ import { Component, inject, signal, WritableSignal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { take } from 'rxjs';
 import { BattleService } from './services/battle/battle.service';
-import { D3XyGraphComponent } from './components/d3-xy-graph/d3-xy-graph.component';
 import { D3BarChartComponent } from './components/d3-bar-chart/d3-bar-chart.component';
-import { NnGraph14Component } from './components/nn-graphs/nn-graph-14/nn-graph-14.component';
 import { NnGraph15Component } from './components/nn-graphs/nn-graph-15/nn-graph-15.component';
 
 @Component({
@@ -12,13 +10,13 @@ import { NnGraph15Component } from './components/nn-graphs/nn-graph-15/nn-graph-
   imports: [
     CommonModule,
     D3BarChartComponent,
-    D3XyGraphComponent,
     NnGraph15Component
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
+  activations: WritableSignal<{ epoch: number, activations: number[][] } | null> = signal(null);
   logs: WritableSignal<any> = signal([]);
   summaryData: WritableSignal<any> = signal(null);
 
@@ -40,18 +38,6 @@ export class AppComponent {
   }
 
   // ------------------ Playback ------------------
-  // async playActivations(creature: 'A' | 'B', speed = 200) {
-  //   const data = await this.battleService.getCreatureGraph(creature).toPromise();
-  //   const history = data.activations_history || [];
-
-  //   for (let epoch = 0; epoch < history.length; epoch++) {
-  //     const activations = history[epoch];
-  //     this.logs.set([{ epoch, activations }]); // update chart
-  //     await new Promise(resolve => setTimeout(resolve, speed));
-  //   }
-  // }
-
-  activations: WritableSignal<{ epoch: number, activations: number[][] } | null> = signal(null);
 
   async playActivations(creature: 'A' | 'B', speed = 200) {
     const data = await this.battleService.getCreatureGraph(creature).toPromise();
@@ -63,7 +49,6 @@ export class AppComponent {
       await new Promise(resolve => setTimeout(resolve, speed));
     }
   }
-
 
   // ------------------ Status messages ------------------
   addStatusMessage(msg: string) {
