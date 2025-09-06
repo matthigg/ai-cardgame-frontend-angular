@@ -60,7 +60,7 @@ export class NnGraph17Component implements OnInit, AfterViewInit {
   @ViewChild('svgRef', { static: true }) svgRef!: ElementRef<SVGSVGElement>;
   @ViewChild('tooltip', { static: true }) tooltipRef!: ElementRef<HTMLDivElement>;
   @Input({ required: true }) activations!: WritableSignal<Activations | null>;
-  @Input() haloRadius = 12;
+  @Input() haloRadius = 6;
   @Input() passDirection: 'forward' | 'backward' | 'none' = 'forward';
   @Input() showActivation = false;
   @Input() weightFontColor = 'white';
@@ -85,12 +85,14 @@ export class NnGraph17Component implements OnInit, AfterViewInit {
 
   // Color scales
   private weightColorScale = d3.scaleLinear<string>()
-    .domain([-1, 0, 1])
-    .range(['steelblue', 'cyan', 'tomato']);
+    // .domain([-1, 0, 1])
+    // .range(['steelblue', 'cyan', 'tomato']);
+    .domain([-1, 1])
+    .range(['#222', 'white']);
 
   private activationColorScale = d3.scaleLinear<string>()
     .domain([0, 1])
-    .range(['steelblue', 'tomato']); 
+    .range(['#222', 'white']); 
 
   constructor(private battleService: BattleService) {
     effect(() => {
