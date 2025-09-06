@@ -40,18 +40,26 @@ export class AppComponent {
   }
 
   // ------------------ Playback ------------------
-  async playActivations(creature: 'A' | 'B', speed = 200) {
-    const data = await this.battleService.getCreatureGraph(creature).toPromise();
-    const history = data.activations_history || [];
+async playActivations(creature: 'A' | 'B', speed = 200) {
+  // Fetch activations history from the backend
+  const data = await this.battleService.getCreatureGraph(creature).toPromise();
+  const history = data.activations_history || [];
 
-    for (let epochIndex = 0; epochIndex < history.length; epochIndex++) {
-      const epochData = history[epochIndex];
-      if (epochData.name !== creature) continue; // skip other creatures if present
-      const activations = epochData.layers;
-      this.activations.set({ epoch: epochData.epoch, activations });
-      await new Promise(resolve => setTimeout(resolve, speed));
-    }
+  for (let epoch = 0; epoch < history.length; epoch++) {
+    const epochData = history[epoch];
+    
+    // Extract layers array for this epoch
+    // Expected format: { name: 'B', epoch: 0, layers: [[...], [...], ...] }
+    const activations = epochData.layers || [];
+    
+    // Set the WritableSignal for the NN graph
+    this.activations.set({ epoch, activations });
+
+    // Optional delay for playback speed
+    await new Promise(resolve => setTimeout(resolve, speed));
   }
+}
+
 
 
   // ------------------ Status messages ------------------

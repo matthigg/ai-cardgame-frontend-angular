@@ -95,6 +95,9 @@ export class NnGraph16Component implements OnInit, AfterViewInit {
   constructor(private battleService: BattleService) {
     effect(() => {
       const data = this.activations();
+
+      console.log('--- data: ', data);
+      
       if (data?.activations?.length) {
         this.buildDynamicLayoutFromActivations(data.activations);
         this.updateGraph(data.activations, data.epoch);
