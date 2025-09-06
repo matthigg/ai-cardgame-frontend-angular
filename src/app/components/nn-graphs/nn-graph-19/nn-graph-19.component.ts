@@ -1,7 +1,7 @@
 import { Component, effect, ElementRef, Input, OnInit, ViewChild, WritableSignal, AfterViewInit, signal, Output, EventEmitter } from '@angular/core';
 import * as d3 from 'd3';
 import { Activations } from '../../../shared/models/activations.model';
-import { colorPalettes, paletteObj } from '../../../shared/utils/utils';
+import { colorPalettes, defaultPalette, paletteObj } from '../../../shared/utils/utils';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -98,8 +98,8 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
   private _currentLayerMapping: number[][][] = [];
 
   colorPaletteKeys: string[] = Object.keys(paletteObj);
-  colorScale = signal(colorPalettes('brightMidnightFlare'));
-  selectedValue: string = '';
+  colorScale = signal(colorPalettes(defaultPalette));
+  selectedValue: string = defaultPalette;
 
   handleColorPalette(): void {
     if (this.selectedValue) {
