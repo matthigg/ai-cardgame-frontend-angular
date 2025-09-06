@@ -1,7 +1,9 @@
-import { Component, effect, ElementRef, Input, OnInit, ViewChild, WritableSignal, AfterViewInit } from '@angular/core';
+import { Component, effect, ElementRef, Input, OnInit, ViewChild, WritableSignal, AfterViewInit, signal } from '@angular/core';
 import * as d3 from 'd3';
-import { BattleService } from '../../../services/battle/battle.service';
 import { Activations } from '../../../shared/models/activations.model';
+import { colorPalettes, paletteObj } from '../../../shared/utils/helper-functions.utils';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 interface Node {
   layer: number;
@@ -19,11 +21,13 @@ interface Link {
 
 @Component({
   selector: 'app-nn-graph-17',
+  imports: [CommonModule, FormsModule],
   template: `
     <div style="margin-bottom: 8px;">
-      <button (click)="toggleShowWeights()">
-        {{ showWeights ? 'Hide' : 'Show' }} Weights
-      </button>
+      <select [(ngModel)]="selectedValue" (change)="handleColorPalette()">
+        <option value="">Select an option</option>
+        <option *ngFor="let palette of colorPaletteKeys" [value]="palette">{{ palette }}</option>
+      </select>
       <button (click)="toggleShowPulses()">
         {{ showPulses ? 'Hide' : 'Show' }} Pulses
       </button>
@@ -83,18 +87,35 @@ export class NnGraph17Component implements OnInit, AfterViewInit {
   private _currentLinks: Link[] = [];
   private _currentLayerMapping: number[][][] = [];
 
+  // colorPalettes = colorPalettes;
+  colorPaletteKeys: string[] = Object.keys(paletteObj);
+  colorScale = signal(colorPalettes('steelTomato'));
+  selectedValue: string = '';
+
+  handleColorPalette(): void {
+    if (this.selectedValue) {
+      this.colorScale.set(colorPalettes(this.selectedValue));
+    }
+
+    this.weightColorScale = d3.scaleLinear<string>()
+      .domain([-1, 0, 1])
+      .range(this.colorScale());
+
+    this.activationColorScale = d3.scaleLinear<string>()
+      .domain([0, 0.5, 1])
+      .range(this.colorScale()); 
+  }
+
   // Color scales
   private weightColorScale = d3.scaleLinear<string>()
-    // .domain([-1, 0, 1])
-    // .range(['steelblue', 'cyan', 'tomato']);
-    .domain([-1, 1])
-    .range(['#222', 'white']);
+    .domain([-1, 0, 1])
+    .range(this.colorScale());
 
   private activationColorScale = d3.scaleLinear<string>()
-    .domain([0, 1])
-    .range(['#222', 'white']); 
+    .domain([0, 0.5, 1])
+    .range(this.colorScale()); 
 
-  constructor(private battleService: BattleService) {
+  constructor() {
     effect(() => {
       const data = this.activations();
 
@@ -120,6 +141,8 @@ export class NnGraph17Component implements OnInit, AfterViewInit {
   ngOnInit(): void {
     this.svg = d3.select(this.svgRef.nativeElement);
     this.svg.selectAll('*').remove();
+
+    console.log('--- this.colorPaletteKeys: ', this.colorPaletteKeys);
   }
 
   ngAfterViewInit(): void {
