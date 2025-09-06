@@ -1,3 +1,5 @@
+export const defaultPalette = 'autumnNightSky';
+
 export const paletteObj: { [key: string]: string[] } = {
   autumnNightSky: ['#222', '#e28413', '#fbf5f3'],
   boldFireGlow: ['#222', '#ff0000', '#ffe100'],

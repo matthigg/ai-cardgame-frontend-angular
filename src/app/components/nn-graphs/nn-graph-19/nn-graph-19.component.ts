@@ -1,7 +1,7 @@
 import { Component, effect, ElementRef, Input, OnInit, ViewChild, WritableSignal, AfterViewInit, signal, Output, EventEmitter } from '@angular/core';
 import * as d3 from 'd3';
 import { Activations } from '../../../shared/models/activations.model';
-import { colorPalettes, paletteObj } from '../../../shared/utils/utils';
+import { colorPalettes, defaultPalette, paletteObj } from '../../../shared/utils/utils';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -25,7 +25,6 @@ interface Link {
   template: `
     <div style="margin-bottom: 8px;">
       <select [(ngModel)]="selectedValue" (change)="handleColorPalette()">
-        <option value="">Select an option</option>
         <option *ngFor="let palette of colorPaletteKeys" [value]="palette">{{ palette }}</option>
       </select>
       <button (click)="toggleShowPulses()">
@@ -98,8 +97,8 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
   private _currentLayerMapping: number[][][] = [];
 
   colorPaletteKeys: string[] = Object.keys(paletteObj);
-  colorScale = signal(colorPalettes('brightMidnightFlare'));
-  selectedValue: string = '';
+  colorScale = signal(colorPalettes(defaultPalette));
+  selectedValue: string = defaultPalette;
 
   handleColorPalette(): void {
     if (this.selectedValue) {
@@ -521,12 +520,57 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
   toggleCenterNeurons(): void {
     this.centerNeurons = !this.centerNeurons;
 
-    // Recompute layout with new alignment
-    if (this._currentNodes.length) {
-      const data = this.activations();
-      const layout = this.buildDynamicLayoutFromActivations(data?.activations || []);
-      this.renderLayout(layout);
-      this.updateGraph(data?.activations || [], data?.epoch, layout, this.sessionId);
-    }
+    // If no nodes yet, nothing to animate
+    if (!this._currentNodes.length) return;
+
+    // Recompute layout
+    const data = this.activations();
+    const newLayout = this.buildDynamicLayoutFromActivations(data?.activations || []);
+
+    // Build a quick lookup map keyed by layer-index
+    const posMap: Record<string, { x: number, y: number }> = {};
+    newLayout.nodes.forEach(n => {
+      posMap[`${n.layer}-${n.index}`] = { x: n.x, y: n.y };
+    });
+
+    // Animate nodes to new positions
+    this._currentNodes.forEach(n => {
+      const key = `${n.layer}-${n.index}`;
+      const p = posMap[key];
+      if (p) {
+        n.x = p.x;
+        n.y = p.y;
+      }
+    });
+
+    // Update layer mapping
+    this._currentLayerMapping = newLayout.layerMapping;
+
+    // Animate halos and nodes
+    const nodeGroup = this.svg.selectAll<SVGGElement, Node>('.node-group');
+    nodeGroup.select<SVGCircleElement>('.halo')
+      .transition()
+      .duration(this.easeDuration)
+      .ease(this.easeType)
+      .attr('cx', d => d.x)
+      .attr('cy', d => d.y);
+
+    nodeGroup.select<SVGCircleElement>('.node')
+      .transition()
+      .duration(this.easeDuration)
+      .ease(this.easeType)
+      .attr('cx', d => d.x)
+      .attr('cy', d => d.y);
+
+    // Animate links
+    this.svg.selectAll<SVGLineElement, Link>('.link')
+      .transition()
+      .duration(this.easeDuration)
+      .ease(this.easeType)
+      .attr('x1', d => d.source.x)
+      .attr('y1', d => d.source.y)
+      .attr('x2', d => d.target.x)
+      .attr('y2', d => d.target.y);
   }
+
 }

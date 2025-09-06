@@ -25,7 +25,6 @@ interface Link {
   template: `
     <div style="margin-bottom: 8px;">
       <select [(ngModel)]="selectedValue" (change)="handleColorPalette()">
-        <option value="">Select an option</option>
         <option *ngFor="let palette of colorPaletteKeys" [value]="palette">{{ palette }}</option>
       </select>
       <button (click)="toggleShowPulses()">
