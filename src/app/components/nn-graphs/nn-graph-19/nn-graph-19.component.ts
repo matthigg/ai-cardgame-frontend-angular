@@ -37,6 +37,9 @@ interface Link {
       <button (click)="toggleLayout()">
         {{ layoutVertical ? 'Horizontal Layout' : 'Vertical Layout' }}
       </button>
+      <button (click)="toggleCenterNeurons()">
+        {{ centerNeurons ? 'Center Neurons: ON' : 'Center Neurons: OFF' }}
+      </button>
     </div>
     <div class="tooltip" #tooltip></div>
     <svg #svgRef></svg>
@@ -80,6 +83,7 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
 
   layoutVertical = false;
   showWeights = false;
+  centerNeurons = true; 
   private svg!: d3.Selection<SVGSVGElement, unknown, null, undefined>;
   private tooltip!: d3.Selection<HTMLDivElement, unknown, null, undefined>;
   private currentCreature: string | null = null;
@@ -268,6 +272,9 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
     return layout;
   }
 
+
+
+
   private buildDynamicLayoutFromActivations(activations: number[][]) {
     const width = this.svgRef.nativeElement.clientWidth || 800;
     const height = this.svgRef.nativeElement.clientHeight || 600;
@@ -282,6 +289,8 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
 
     const layerCount = activations.length;
     const maxNeurons = Math.max(...activations.map(l => (Array.isArray(l) ? l.length : 1)));
+
+    // Base gaps
     const layerXGap = width / (layerCount + 1);
     const layerYGap = height / (layerCount + 1);
     const neuronXGap = width / (maxNeurons + 1);
@@ -291,12 +300,25 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
       const displayUnits = Array.isArray(layer[0]) ? layer : layer.map(v => [v]);
       const mapping: number[][] = [];
 
+      // Compute per-layer offset for center alignment
+      const neuronCount = displayUnits.length;
+      const offsetX = this.centerNeurons
+        ? (width - neuronXGap * (neuronCount - 1)) / 2
+        : 0;
+      const offsetY = this.centerNeurons
+        ? (height - neuronYGap * (neuronCount - 1)) / 2
+        : 0;
+
       displayUnits.forEach((_, i) => {
         nodes.push({
           layer: layerIndex,
           index: i,
-          x: this.layoutVertical ? (i + 1) * neuronXGap : (layerIndex + 1) * layerXGap,
-          y: this.layoutVertical ? (layerIndex + 1) * layerYGap : (i + 1) * neuronYGap,
+          x: this.layoutVertical
+            ? i * neuronXGap + offsetX
+            : (layerIndex + 1) * layerXGap,
+          y: this.layoutVertical
+            ? (layerIndex + 1) * layerYGap
+            : i * neuronYGap + offsetY,
           activation: 0
         });
         mapping.push([i]);
@@ -309,15 +331,22 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
     for (let l = 0; l < layerMapping.length - 1; l++) {
       const fromLayer = nodes.filter(n => n.layer === l);
       const toLayer = nodes.filter(n => n.layer === l + 1);
-      fromLayer.forEach(src => toLayer.forEach(tgt => links.push({
-        source: src,
-        target: tgt,
-        weight: Math.random() * 2 - 1
-      })));
+      fromLayer.forEach(src =>
+        toLayer.forEach(tgt =>
+          links.push({
+            source: src,
+            target: tgt,
+            weight: Math.random() * 2 - 1
+          })
+        )
+      );
     }
 
     return { nodes, links, layerMapping };
   }
+
+
+
 
   private renderLayout(layout: { nodes: Node[], links: Link[], layerMapping: number[][][] }) {
     const { nodes, links } = layout;
@@ -487,5 +516,17 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
       .attr('fill', d => this.activationColorScale(d.activation))
       .attr('cx', d => d.x)
       .attr('cy', d => d.y);
+  }
+
+  toggleCenterNeurons(): void {
+    this.centerNeurons = !this.centerNeurons;
+
+    // Recompute layout with new alignment
+    if (this._currentNodes.length) {
+      const data = this.activations();
+      const layout = this.buildDynamicLayoutFromActivations(data?.activations || []);
+      this.renderLayout(layout);
+      this.updateGraph(data?.activations || [], data?.epoch, layout, this.sessionId);
+    }
   }
 }
