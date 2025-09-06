@@ -4,7 +4,6 @@ import { take } from 'rxjs';
 import { BattleService } from './services/battle/battle.service';
 import { D3BarChartComponent } from './components/d3-bar-chart/d3-bar-chart.component';
 import { NnGraph16Component } from './components/nn-graphs/nn-graph-16/nn-graph-16.component';
-import { NnGraph17Component } from './components/nn-graphs/nn-graph-17/nn-graph-17.component';
 import { Activations } from './shared/models/activations.model';
 
 @Component({
@@ -13,7 +12,6 @@ import { Activations } from './shared/models/activations.model';
     CommonModule,
     D3BarChartComponent,
     NnGraph16Component,
-    NnGraph17Component,
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
@@ -28,10 +26,14 @@ export class AppComponent {
 
   private battleService: BattleService = inject(BattleService);
 
+  // ---- Playback cancellation guard ----
+  private playbackId = 0;        // increments to cancel any in-flight playback
+  private defaultSpeed = 200;
+
   constructor() {}
 
   // ------------------ Training ------------------
-  async onTrain(creature: 'A' | 'B', playbackSpeed = 200) {
+  async onTrain(creature: 'A' | 'B', playbackSpeed = this.defaultSpeed) {
     this.addStatusMessage('Training started...');
     const result = await this.battleService.getTrain().pipe(take(1)).toPromise();
     this.summaryData.set(result.summary);
@@ -40,35 +42,43 @@ export class AppComponent {
     this.addStatusMessage('Activation playback finished.');
   }
 
-  // ------------------ Playback ------------------
-  async playActivations(creature: 'A' | 'B', speed = 200) {
-    // Fetch activations history from the backend
-    const data = await this.battleService.getCreatureGraph(creature).toPromise();
+  // ------------------ Creature switches ------------------
+  // Call this when the user switches which creature to view.
+  async onShowCreature(creature: 'A' | 'B', speed = this.defaultSpeed) {
+    this.stopPlayback();                 // Cancel any in-flight loop
+    await this.playActivations(creature, speed);
+  }
 
-    console.log('--- pb data: ', data);
-    
+  stopPlayback() {
+    // Incrementing this tells any existing playActivations loop to exit early
+    this.playbackId++;
+  }
+
+  // ------------------ Playback ------------------
+  async playActivations(creature: 'A' | 'B', speed = this.defaultSpeed) {
+    // Capture a local id to detect cancellation
+    const myId = ++this.playbackId;
+
+    const data = await this.battleService.getCreatureGraph(creature).toPromise();
+    if (myId !== this.playbackId) return; // cancelled while fetching
+
     const history = data.activations_history || [];
 
     for (let epoch = 0; epoch < history.length; epoch++) {
+      if (myId !== this.playbackId) return; // cancelled mid-loop
 
-      console.log('--- epoch: ', epoch);
-      
       const epochData = history[epoch];
       const lastEpoch = epoch === history.length - 1;
-      
-      // Extract layers array for this epoch
-      // Expected format: { name: 'B', epoch: 0, layers: [[...], [...], ...] }
       const activations = epochData.layers || [];
-      
-      // Set the WritableSignal for the NN graph
+
+      // Push a frame
       this.activations.set({ creature, epoch, lastEpoch, activations });
 
-      // Optional delay for playback speed
+      // Delay with cancellation check on both sides
       await new Promise(resolve => setTimeout(resolve, speed));
+      if (myId !== this.playbackId) return;
     }
   }
-
-
 
   // ------------------ Status messages ------------------
   addStatusMessage(msg: string) {
