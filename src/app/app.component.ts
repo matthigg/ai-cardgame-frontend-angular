@@ -32,17 +32,33 @@ export class AppComponent {
   private playbackId = 0;        // increments to cancel any in-flight playback
   private defaultSpeed = 200;
   public isPlaying: WritableSignal<boolean> = signal(false);
+  public isTraining: WritableSignal<boolean> = signal(false);
 
   constructor() {}
 
   // ------------------ Training ------------------
   async onTrain(creature: 'A' | 'B', playbackSpeed = this.defaultSpeed) {
+    this.isTraining.set(true);                     // 🔹 spinner on
     this.addStatusMessage('Training started...');
-    const result = await this.battleService.getTrain().pipe(take(1)).toPromise();
-    this.summaryData.set(result.summary);
-    this.addStatusMessage('Training completed! Fetching activations...');
-    await this.playActivations(creature, playbackSpeed);
-    this.addStatusMessage('Activation playback finished.');
+
+    try {
+      // Wait for training loop to finish on server
+      const result = await this.battleService.getTrain().pipe(take(1)).toPromise();
+
+      this.summaryData.set(result.summary);
+      this.addStatusMessage('Training completed! Fetching activations...');
+
+      this.isTraining.set(false);                  // 🔹 stop spinner here
+                                                  // (before playback starts)
+
+      // Playback continues, but spinner no longer blocks UI
+      await this.playActivations(creature, playbackSpeed);
+
+      this.addStatusMessage('Activation playback finished.');
+    } catch (err) {
+      this.isTraining.set(false);                  // 🔹 ensure reset on error
+      throw err;
+    }
   }
 
   // ------------------ Creature switches ------------------

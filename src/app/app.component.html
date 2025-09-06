@@ -20,3 +20,7 @@
   <button (click)="onTrain('A')">Run Training Loop (Creature A)</button>
   <button (click)="onTrain('B')">Run Training Loop (Creature B)</button>
 </div>
+
+<div *ngIf="isTraining()" class="spinner-overlay">
+  <div class="spinner"></div>
+</div>
