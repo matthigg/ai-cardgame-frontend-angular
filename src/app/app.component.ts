@@ -5,6 +5,8 @@ import { BattleService } from './services/battle/battle.service';
 import { D3BarChartComponent } from './components/d3-bar-chart/d3-bar-chart.component';
 import { NnGraph16Component } from './components/nn-graphs/nn-graph-16/nn-graph-16.component';
 import { Activations } from './shared/models/activations.model';
+import { NnGraph17Component } from './components/nn-graphs/nn-graph-17/nn-graph-17.component';
+import { NnGraph18Component } from './components/nn-graphs/nn-graph-18/nn-graph-18.component';
 
 @Component({
   selector: 'app-root',
@@ -12,6 +14,8 @@ import { Activations } from './shared/models/activations.model';
     CommonModule,
     D3BarChartComponent,
     NnGraph16Component,
+    NnGraph17Component,
+    NnGraph18Component,
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
