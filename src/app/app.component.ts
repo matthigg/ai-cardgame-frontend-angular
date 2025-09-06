@@ -4,16 +4,16 @@ import { take } from 'rxjs';
 import { Activations } from './shared/models/activations.model';
 import { BattleService } from './services/battle/battle.service';
 import { D3BarChartComponent } from './components/d3-bar-chart/d3-bar-chart.component';
-import { NnGraph17Component } from './components/nn-graphs/nn-graph-17/nn-graph-17.component';
 import { NnGraph18Component } from './components/nn-graphs/nn-graph-18/nn-graph-18.component';
+import { NnGraph19Component } from './components/nn-graphs/nn-graph-19/nn-graph-19.component';
 
 @Component({
   selector: 'app-root',
   imports: [
     CommonModule,
     D3BarChartComponent,
-    // NnGraph17Component,
-    NnGraph18Component,
+    // NnGraph18Component,
+    NnGraph19Component,
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'

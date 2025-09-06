@@ -3,12 +3,6 @@
   <button (click)="onTrain('B')">Run Training Loop (Creature B)</button>
 </div>
 
-<!-- <app-d3-xy-graph 
-  [logs]="logs"
-  [statusMessages]="statusMessages"
-  [summaryData]="summaryData"
-></app-d3-xy-graph> -->
-
 <app-d3-bar-chart [summaryData]="summaryData"></app-d3-bar-chart>
 
 <div class="p-4">
@@ -16,11 +10,13 @@
   <button (click)="onTrain('B')">Run Training Loop (Creature B)</button>
 </div>
 
-<!-- <app-nn-graph-16 [activations]="activations"></app-nn-graph-16> -->
-<!-- <app-nn-graph-17 [activations]="activations"></app-nn-graph-17> -->
-<app-nn-graph-18 
+<app-nn-graph-19 
   [activations]="activations"
   [isPlaying]="isPlaying"
   (layoutToggled)="onLayoutToggled($event)"
-></app-nn-graph-18>
+></app-nn-graph-19>
 
+<div class="p-4">
+  <button (click)="onTrain('A')">Run Training Loop (Creature A)</button>
+  <button (click)="onTrain('B')">Run Training Loop (Creature B)</button>
+</div>
