@@ -4,13 +4,15 @@ import { take } from 'rxjs';
 import { BattleService } from './services/battle/battle.service';
 import { D3BarChartComponent } from './components/d3-bar-chart/d3-bar-chart.component';
 import { NnGraph15Component } from './components/nn-graphs/nn-graph-15/nn-graph-15.component';
+import { NnGraph16Component } from './components/nn-graphs/nn-graph-16/nn-graph-16.component';
 
 @Component({
   selector: 'app-root',
   imports: [
     CommonModule,
     D3BarChartComponent,
-    NnGraph15Component
+    // NnGraph15Component,
+    NnGraph16Component,
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
@@ -38,17 +40,19 @@ export class AppComponent {
   }
 
   // ------------------ Playback ------------------
-
   async playActivations(creature: 'A' | 'B', speed = 200) {
     const data = await this.battleService.getCreatureGraph(creature).toPromise();
     const history = data.activations_history || [];
 
-    for (let epoch = 0; epoch < history.length; epoch++) {
-      const activations = history[epoch];
-      this.activations.set({ epoch, activations });
+    for (let epochIndex = 0; epochIndex < history.length; epochIndex++) {
+      const epochData = history[epochIndex];
+      if (epochData.name !== creature) continue; // skip other creatures if present
+      const activations = epochData.layers;
+      this.activations.set({ epoch: epochData.epoch, activations });
       await new Promise(resolve => setTimeout(resolve, speed));
     }
   }
+
 
   // ------------------ Status messages ------------------
   addStatusMessage(msg: string) {

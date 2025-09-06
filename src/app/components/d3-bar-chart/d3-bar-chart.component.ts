@@ -45,7 +45,7 @@ private createChart(): void {
 
     // Custom x-axis order including a divider
     const xOrder = [
-      'attack', 'defend', 'poison', 'stun', 'recover',
+      'attack', 'defend', 'recover', 'poison', 'stun',
       'divider',
       'knockout', 'stunned', 'poisoned', 'stalemates'
     ];
