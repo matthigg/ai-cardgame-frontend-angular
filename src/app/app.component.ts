@@ -98,7 +98,7 @@ export class AppComponent {
   }
 
   // ------------------ Track layout state ------------------
-  onLayoutToggled(direction: 'vertical' | 'horizontal') {
+  onLayoutToggled(direction: 'vertical' | 'horizontal' | 'center') {
     // Increment playbackId to cancel the current epoch loop
     this.playbackId++;
     console.log(`Layout changed to ${direction}, playback canceled.`);

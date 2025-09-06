@@ -1,7 +1,7 @@
 import { Component, effect, ElementRef, Input, OnInit, ViewChild, WritableSignal, AfterViewInit, signal, Output, EventEmitter } from '@angular/core';
 import * as d3 from 'd3';
 import { Activations } from '../../../shared/models/activations.model';
-import { colorPalettes, defaultPalette, paletteObj } from '../../../shared/utils/utils';
+import { colorPalettes, paletteObj } from '../../../shared/utils/utils';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -25,6 +25,7 @@ interface Link {
   template: `
     <div style="margin-bottom: 8px;">
       <select [(ngModel)]="selectedValue" (change)="handleColorPalette()">
+        <option value="">Select an option</option>
         <option *ngFor="let palette of colorPaletteKeys" [value]="palette">{{ palette }}</option>
       </select>
       <button (click)="toggleShowPulses()">
@@ -78,7 +79,7 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
   @Input() linkPulseScale = 4;
   @Input() linkPulseOpacity = 0.7;
   @Input({ required: true }) isPlaying!: WritableSignal<boolean>;
-  @Output() layoutToggled = new EventEmitter<'vertical' | 'horizontal'>();
+  @Output() layoutToggled = new EventEmitter<'vertical' | 'horizontal' | 'center'>();
 
   layoutVertical = false;
   showWeights = false;
@@ -97,8 +98,8 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
   private _currentLayerMapping: number[][][] = [];
 
   colorPaletteKeys: string[] = Object.keys(paletteObj);
-  colorScale = signal(colorPalettes(defaultPalette));
-  selectedValue: string = defaultPalette;
+  colorScale = signal(colorPalettes('brightMidnightFlare'));
+  selectedValue: string = '';
 
   handleColorPalette(): void {
     if (this.selectedValue) {
@@ -519,21 +520,21 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
 
   toggleCenterNeurons(): void {
     this.centerNeurons = !this.centerNeurons;
+    
+    // Emit an event so parent can cancel playback
+    this.layoutToggled.emit('center'); 
 
-    // If no nodes yet, nothing to animate
     if (!this._currentNodes.length) return;
 
-    // Recompute layout
+    // Recompute positions without rebinding DOM
     const data = this.activations();
     const newLayout = this.buildDynamicLayoutFromActivations(data?.activations || []);
 
-    // Build a quick lookup map keyed by layer-index
     const posMap: Record<string, { x: number, y: number }> = {};
     newLayout.nodes.forEach(n => {
       posMap[`${n.layer}-${n.index}`] = { x: n.x, y: n.y };
     });
 
-    // Animate nodes to new positions
     this._currentNodes.forEach(n => {
       const key = `${n.layer}-${n.index}`;
       const p = posMap[key];
@@ -543,10 +544,9 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
       }
     });
 
-    // Update layer mapping
     this._currentLayerMapping = newLayout.layerMapping;
 
-    // Animate halos and nodes
+    // Animate nodes
     const nodeGroup = this.svg.selectAll<SVGGElement, Node>('.node-group');
     nodeGroup.select<SVGCircleElement>('.halo')
       .transition()
@@ -572,5 +572,4 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
       .attr('x2', d => d.target.x)
       .attr('y2', d => d.target.y);
   }
-
 }
