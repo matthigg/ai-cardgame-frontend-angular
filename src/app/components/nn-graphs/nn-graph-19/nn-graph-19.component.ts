@@ -79,6 +79,7 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
   @Input() linkPulseScale = 4;
   @Input() linkPulseOpacity = 0.7;
   @Input({ required: true }) isPlaying!: WritableSignal<boolean>;
+  @Input() uncenteredNeuronPadding: number = 30;
   @Output() layoutToggled = new EventEmitter<'vertical' | 'horizontal' | 'center'>();
 
   layoutVertical = false;
@@ -304,10 +305,10 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
       const neuronCount = displayUnits.length;
       const offsetX = this.centerNeurons
         ? (width - neuronXGap * (neuronCount - 1)) / 2
-        : 0;
+        : this.uncenteredNeuronPadding;
       const offsetY = this.centerNeurons
         ? (height - neuronYGap * (neuronCount - 1)) / 2
-        : 0;
+        : this.uncenteredNeuronPadding;
 
       displayUnits.forEach((_, i) => {
         nodes.push({
