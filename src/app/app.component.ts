@@ -18,7 +18,7 @@ import { NnGraph16Component } from './components/nn-graphs/nn-graph-16/nn-graph-
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
-  activations: WritableSignal<{ epoch: number, activations: number[][] } | null> = signal(null);
+  activations: WritableSignal<{ creature: string, epoch: number, activations: number[][] } | null> = signal(null);
   logs: WritableSignal<any> = signal([]);
   summaryData: WritableSignal<any> = signal(null);
 
@@ -43,6 +43,9 @@ export class AppComponent {
 async playActivations(creature: 'A' | 'B', speed = 200) {
   // Fetch activations history from the backend
   const data = await this.battleService.getCreatureGraph(creature).toPromise();
+
+  console.log('--- pb data: ', data);
+  
   const history = data.activations_history || [];
 
   for (let epoch = 0; epoch < history.length; epoch++) {
@@ -53,7 +56,7 @@ async playActivations(creature: 'A' | 'B', speed = 200) {
     const activations = epochData.layers || [];
     
     // Set the WritableSignal for the NN graph
-    this.activations.set({ epoch, activations });
+    this.activations.set({ creature, epoch, activations });
 
     // Optional delay for playback speed
     await new Promise(resolve => setTimeout(resolve, speed));
