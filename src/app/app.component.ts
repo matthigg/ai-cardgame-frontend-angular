@@ -12,8 +12,8 @@ import { NnGraph18Component } from './components/nn-graphs/nn-graph-18/nn-graph-
   imports: [
     CommonModule,
     D3BarChartComponent,
-    NnGraph17Component,
-    // NnGraph18Component,
+    // NnGraph17Component,
+    NnGraph18Component,
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
@@ -31,6 +31,7 @@ export class AppComponent {
   // ---- Playback cancellation guard ----
   private playbackId = 0;        // increments to cancel any in-flight playback
   private defaultSpeed = 200;
+  public isPlaying: WritableSignal<boolean> = signal(false);
 
   constructor() {}
 
@@ -60,26 +61,47 @@ export class AppComponent {
   async playActivations(creature: 'A' | 'B', speed = this.defaultSpeed) {
     // Capture a local id to detect cancellation
     const myId = ++this.playbackId;
+    this.isPlaying.set(true); // 🔹 playback started
 
-    const data = await this.battleService.getCreatureGraph(creature).toPromise();
-    if (myId !== this.playbackId) return; // cancelled while fetching
+    try {
+      const data = await this.battleService.getCreatureGraph(creature).toPromise();
+      if (myId !== this.playbackId) {
+        this.isPlaying.set(false); // 🔹 canceled while fetching
+        return;
+      }
 
-    const history = data.activations_history || [];
+      const history = data.activations_history || [];
 
-    for (let epoch = 0; epoch < history.length; epoch++) {
-      if (myId !== this.playbackId) return; // cancelled mid-loop
+      for (let epoch = 0; epoch < history.length; epoch++) {
+        if (myId !== this.playbackId) {
+          this.isPlaying.set(false); // 🔹 canceled mid-loop
+          return;
+        }
 
-      const epochData = history[epoch];
-      const lastEpoch = epoch === history.length - 1;
-      const activations = epochData.layers || [];
+        const epochData = history[epoch];
+        const lastEpoch = epoch === history.length - 1;
+        const activations = epochData.layers || [];
 
-      // Push a frame
-      this.activations.set({ creature, epoch, lastEpoch, activations });
+        // Push a frame
+        this.activations.set({ creature, epoch, lastEpoch, activations });
 
-      // Delay with cancellation check on both sides
-      await new Promise(resolve => setTimeout(resolve, speed));
-      if (myId !== this.playbackId) return;
+        // Delay with cancellation check on both sides
+        await new Promise(resolve => setTimeout(resolve, speed));
+        if (myId !== this.playbackId) {
+          this.isPlaying.set(false); // 🔹 canceled during delay
+          return;
+        }
+      }
+    } finally {
+      this.isPlaying.set(false); // 🔹 always reset after finishing
     }
+  }
+
+  // ------------------ Track layout state ------------------
+  onLayoutToggled(direction: 'vertical' | 'horizontal') {
+    // Increment playbackId to cancel the current epoch loop
+    this.playbackId++;
+    console.log(`Layout changed to ${direction}, playback canceled.`);
   }
 
   // ------------------ Status messages ------------------

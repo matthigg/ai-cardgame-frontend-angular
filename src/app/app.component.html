@@ -17,6 +17,10 @@
 </div>
 
 <!-- <app-nn-graph-16 [activations]="activations"></app-nn-graph-16> -->
-<app-nn-graph-17 [activations]="activations"></app-nn-graph-17>
-<!-- <app-nn-graph-18></app-nn-graph-18> -->
+<!-- <app-nn-graph-17 [activations]="activations"></app-nn-graph-17> -->
+<app-nn-graph-18 
+  [activations]="activations"
+  [isPlaying]="isPlaying"
+  (layoutToggled)="onLayoutToggled($event)"
+></app-nn-graph-18>
 

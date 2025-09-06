@@ -1,250 +1,491 @@
-import { Component, effect, signal, WritableSignal } from '@angular/core';
+import { Component, effect, ElementRef, Input, OnInit, ViewChild, WritableSignal, AfterViewInit, signal, Output, EventEmitter } from '@angular/core';
 import * as d3 from 'd3';
-import { BattleService } from '../../../services/battle/battle.service';
+import { Activations } from '../../../shared/models/activations.model';
+import { colorPalettes, paletteObj } from '../../../shared/utils/utils';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+
+interface Node {
+  layer: number;
+  index: number;
+  x: number;
+  y: number;
+  activation: number;
+}
+
+interface Link {
+  source: Node;
+  target: Node;
+  weight: number;
+}
 
 @Component({
   selector: 'app-nn-graph-18',
-  template: `<svg id="nn-svg" width="800" height="600"></svg>`,
+  imports: [CommonModule, FormsModule],
+  template: `
+    <div style="margin-bottom: 8px;">
+      <select [(ngModel)]="selectedValue" (change)="handleColorPalette()">
+        <option value="">Select an option</option>
+        <option *ngFor="let palette of colorPaletteKeys" [value]="palette">{{ palette }}</option>
+      </select>
+      <button (click)="toggleShowPulses()">
+        {{ showPulses ? 'Hide' : 'Show' }} Pulses
+      </button>
+      <button (click)="togglePulseDirection()">
+        {{ passDirection }} Pulse Direction
+      </button>
+      <button (click)="toggleLayout()">
+        {{ layoutVertical ? 'Horizontal Layout' : 'Vertical Layout' }}
+      </button>
+    </div>
+    <div class="tooltip" #tooltip></div>
+    <svg #svgRef></svg>
+  `,
   styles: [`
-    svg { border: 1px solid #ccc; }
+    svg { width: 100%; height: 600px; background: #111; display: block; }
+    .halo { pointer-events: none; }
+    .activation-text, .weight-text {
+      font-size: 12px;
+      text-anchor: middle;
+      pointer-events: none;
+      font-family: monospace;
+    }
     .tooltip {
       position: absolute;
-      text-align: center;
-      padding: 4px;
-      font: 12px sans-serif;
-      background: lightsteelblue;
-      border: 0px;
-      border-radius: 4px;
       pointer-events: none;
+      background: rgba(0,0,0,0.8);
+      color: white;
+      padding: 4px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+      opacity: 0;
+      transition: opacity 0.2s;
     }
   `]
 })
-export class NnGraph18Component {
-  activations: WritableSignal<any> = signal(null);
+export class NnGraph18Component implements OnInit, AfterViewInit {
+  @ViewChild('svgRef', { static: true }) svgRef!: ElementRef<SVGSVGElement>;
+  @ViewChild('tooltip', { static: true }) tooltipRef!: ElementRef<HTMLDivElement>;
+  @Input({ required: true }) activations!: WritableSignal<Activations | null>;
+  @Input() haloRadius = 6;
+  @Input() passDirection: 'forward' | 'backward' | 'none' = 'forward';
+  @Input() showActivation = false;
+  @Input() weightFontColor = 'white';
+  @Input() showPulses = false;
+  @Input() easeType: (t: number) => number = d3.easeLinear;
+  @Input() linkPulseScale = 4;
+  @Input() linkPulseOpacity = 0.7;
+  @Input({ required: true }) isPlaying!: WritableSignal<boolean>;
+  @Output() layoutToggled = new EventEmitter<'vertical' | 'horizontal'>();
 
-  private svg!: d3.Selection<SVGSVGElement, unknown, HTMLElement, any>;
-  private nodes: any[] = [];
-  private links: any[] = [];
-  private layerMapping: any[] = [];
-  private layouts: Record<string, { nodes: any[]; links: any[]; layerMapping: any[] }> = {};
+  layoutVertical = false;
+  showWeights = false;
+  private svg!: d3.Selection<SVGSVGElement, unknown, null, undefined>;
+  private tooltip!: d3.Selection<HTMLDivElement, unknown, null, undefined>;
   private currentCreature: string | null = null;
 
-  // ---- Color scales ----
-  private activationColorScale = d3.scaleLinear<string>()
-    .domain([0, 1])
-    .range(['blue', 'red']);
+  private tickDuration = 1000;
+  private easeDuration = this.tickDuration;
+  private pulseDuration = this.tickDuration * 0.9;
 
+  private sessionId = 0;
+  private _currentNodes: Node[] = [];
+  private _currentLinks: Link[] = [];
+  private _currentLayerMapping: number[][][] = [];
+
+  colorPaletteKeys: string[] = Object.keys(paletteObj);
+  colorScale = signal(colorPalettes('brightMidnightFlare'));
+  selectedValue: string = '';
+
+  handleColorPalette(): void {
+    if (this.selectedValue) {
+      this.colorScale.set(colorPalettes(this.selectedValue));
+    }
+
+    // Recreate scales using new palette
+    this.weightColorScale = d3.scaleLinear<string>()
+      .domain([-1, 0, 1])
+      .range(this.colorScale());
+
+    this.activationColorScale = d3.scaleLinear<string>()
+      .domain([0, 0.5, 1])
+      .range(this.colorScale());
+  }
+
+  // Color scales (initialized with default palette)
   private weightColorScale = d3.scaleLinear<string>()
     .domain([-1, 0, 1])
-    .range(['blue', 'purple', 'red']);
+    .range(this.colorScale());
 
-  // ---- Pulse settings ----
-  private showPulses = true;
-  private passDirection: 'forward' | 'backward' = 'forward';
-  private pulseDuration = 900;
-  private sessionId = 0;
+  private activationColorScale = d3.scaleLinear<string>()
+    .domain([0, 0.5, 1])
+    .range(this.colorScale());
 
-  // ---- Coloring mode ----
-  private useActivationColoring = true; // toggle: true = activation-based, false = weight-based
-
-  constructor(private battleService: BattleService) {
+  constructor() {
+    // Watch the activations signal and update graph
     effect(() => {
       const data = this.activations();
+
       if (!data?.activations?.length) {
-        this.clearGraph();
+        this.hardResetSvg();
         return;
       }
 
       if (this.currentCreature !== data.creature) {
-        this.sessionId++; // invalidate old pulses
+        // Creature switched: full rebuild
         this.currentCreature = data.creature;
-        this.rebuildGraph(data.creature, data.activations);
+        this.sessionId++;
+        this.hardResetSvg();
+        const layout = this.buildDynamicLayoutFromActivations(data.activations);
+        this.renderLayout(layout);
+        this.updateGraph(data.activations, data.epoch, layout, this.sessionId);
       } else {
-        this.updateGraph(data.activations, data.epoch);
+        // Same creature: update activations/pulses
+        const layout = this.ensureLayoutForCurrent(data.activations);
+        this.updateGraph(data.activations, data.epoch, layout, this.sessionId);
       }
     });
   }
 
-  ngOnInit() {
-    this.svg = d3.select<SVGSVGElement, unknown>('#nn-svg');
+  ngOnInit(): void {
+    this.svg = d3.select(this.svgRef.nativeElement);
+    this.svg.selectAll('*').remove();
   }
 
-  private clearGraph() {
-    this.svg?.selectAll('*').remove();
-    this.nodes = [];
-    this.links = [];
-    this.layerMapping = [];
+  ngAfterViewInit(): void {
+    this.tooltip = d3.select(this.tooltipRef.nativeElement);
   }
 
-  private rebuildGraph(creature: string, activations: number[][]) {
-    this.clearGraph();
-    this.buildDynamicLayoutFromActivations(activations);
-
-    this.layouts[creature] = {
-      nodes: JSON.parse(JSON.stringify(this.nodes)),
-      links: JSON.parse(JSON.stringify(this.links)),
-      layerMapping: JSON.parse(JSON.stringify(this.layerMapping))
-    };
-
-    this.updateGraph(activations, 0);
-  }
-
-  private buildDynamicLayoutFromActivations(activations: number[][]) {
-    const width = 800;
-    const height = 600;
-    const layerSpacing = width / (activations.length + 1);
-    const nodeRadius = 15;
-
-    this.nodes = [];
-    this.links = [];
-    this.layerMapping = [];
-
-    activations.forEach((layer, layerIndex) => {
-      const ySpacing = height / (layer.length + 1);
-      const layerNodes = layer.map((activation, i) => {
-        const node = {
-          id: `${layerIndex}-${i}`,
-          layer: layerIndex,
-          index: i,
-          activation,
-          x: (layerIndex + 1) * layerSpacing,
-          y: (i + 1) * ySpacing
-        };
-        this.nodes.push(node);
-        return node;
-      });
-      this.layerMapping.push(layerNodes);
-    });
-
-    for (let l = 0; l < this.layerMapping.length - 1; l++) {
-      const currLayer = this.layerMapping[l];
-      const nextLayer = this.layerMapping[l + 1];
-      currLayer.forEach((source: any) => {
-        nextLayer.forEach((target: any) => {
-          this.links.push({
-            source,
-            target,
-            weight: Math.random() * 2 - 1 // placeholder
-          });
-        });
-      });
+  toggleShowWeights(): void {
+    this.showWeights = !this.showWeights;
+    if (this.currentCreature) {
+      const data = this.activations();
+      const layout = this.ensureLayoutForCurrent(data?.activations || []);
+      this.updateGraph(data?.activations || [], undefined, layout, this.sessionId);
     }
   }
 
-  private updateGraph(activations: number[][], epoch: number) {
-    // update nodes with latest activations
-    activations.forEach((layer, layerIndex) => {
-      layer.forEach((activation, i) => {
-        const node = this.nodes.find(n => n.id === `${layerIndex}-${i}`);
-        if (node) node.activation = activation;
-      });
+  toggleShowPulses(): void {
+    this.showPulses = !this.showPulses;
+    if (this.currentCreature) {
+      const data = this.activations();
+      const layout = this.ensureLayoutForCurrent(data?.activations || []);
+      this.updateGraph(data?.activations || [], undefined, layout, this.sessionId);
+    }
+  }
+
+  togglePulseDirection(): void {
+    this.passDirection = this.passDirection === 'forward' ? 'backward' : 'forward';
+  }
+
+  /**
+   * Toggle layout orientation. Instead of fully re-rendering, compute the
+   * new coordinates for nodes and animate nodes + links to the new positions.
+   */
+  toggleLayout(): void {
+    this.layoutVertical = !this.layoutVertical;
+    this.layoutToggled.emit(this.layoutVertical ? 'vertical' : 'horizontal');
+
+    // If no layout yet, nothing to animate; ensure layout/render
+    if (!this._currentNodes.length) {
+      const data = this.activations();
+      if (!data?.activations?.length) return;
+      const layout = this.buildDynamicLayoutFromActivations(data.activations);
+      this.renderLayout(layout);
+      this.updateGraph(data.activations, data.epoch, layout, this.sessionId);
+      return;
+    }
+
+    // Build a new layout purely to get target coordinates (but don't re-bind DOM)
+    const data = this.activations();
+    const newLayout = this.buildDynamicLayoutFromActivations(data?.activations || []);
+
+    // Build a quick lookup map keyed by layer-index
+    const posMap: Record<string, { x: number, y: number }> = {};
+    newLayout.nodes.forEach(n => {
+      posMap[`${n.layer}-${n.index}`] = { x: n.x, y: n.y };
     });
 
-    // --- Links ---
-    const linkSel = this.svg.selectAll<SVGLineElement, any>('line.link')
-      .data(this.links, (d: any) => `${d.source.id}-${d.target.id}`);
+    // Apply target positions to existing node objects (so Link.source/target still refer to same Node objects)
+    this._currentNodes.forEach(n => {
+      const key = `${n.layer}-${n.index}`;
+      const p = posMap[key];
+      if (p) {
+        n.x = p.x;
+        n.y = p.y;
+      }
+    });
 
-    linkSel.enter()
+    // Update the stored layerMapping to the new one (structure should be same counts)
+    this._currentLayerMapping = newLayout.layerMapping;
+
+    // Animate node halos and nodes positions
+    const nodeGroup = this.svg.selectAll<SVGGElement, Node>('.node-group');
+
+    nodeGroup.select<SVGCircleElement>('.halo')
+      .transition()
+      .duration(this.easeDuration)
+      .ease(this.easeType)
+      .attr('cx', (d: any) => d.x)
+      .attr('cy', (d: any) => d.y);
+
+    nodeGroup.select<SVGCircleElement>('.node')
+      .transition()
+      .duration(this.easeDuration)
+      .ease(this.easeType)
+      .attr('cx', (d: any) => d.x)
+      .attr('cy', (d: any) => d.y);
+
+    // Animate links positions
+    this.svg.selectAll<SVGLineElement, Link>('.link')
+      .transition()
+      .duration(this.easeDuration)
+      .ease(this.easeType)
+      .attr('x1', d => d.source.x)
+      .attr('y1', d => d.source.y)
+      .attr('x2', d => d.target.x)
+      .attr('y2', d => d.target.y);
+  }
+
+  private hardResetSvg(): void {
+    this.svg.selectAll('*').interrupt();
+    (this.svg.node() as SVGSVGElement)?.replaceChildren();
+    this._currentNodes = [];
+    this._currentLinks = [];
+    this._currentLayerMapping = [];
+  }
+
+  private ensureLayoutForCurrent(activations: number[][]) {
+    if (this._currentNodes.length && this._currentLinks.length) {
+      return {
+        nodes: this._currentNodes,
+        links: this._currentLinks,
+        layerMapping: this._currentLayerMapping
+      };
+    }
+    const layout = this.buildDynamicLayoutFromActivations(activations);
+    this.renderLayout(layout);
+    return layout;
+  }
+
+  private buildDynamicLayoutFromActivations(activations: number[][]) {
+    const width = this.svgRef.nativeElement.clientWidth || 800;
+    const height = this.svgRef.nativeElement.clientHeight || 600;
+
+    const nodes: Node[] = [];
+    const links: Link[] = [];
+    const layerMapping: number[][][] = [];
+
+    if (!activations || !activations.length) {
+      return { nodes, links, layerMapping };
+    }
+
+    const layerCount = activations.length;
+    const maxNeurons = Math.max(...activations.map(l => (Array.isArray(l) ? l.length : 1)));
+    const layerXGap = width / (layerCount + 1);
+    const layerYGap = height / (layerCount + 1);
+    const neuronXGap = width / (maxNeurons + 1);
+    const neuronYGap = height / (maxNeurons + 1);
+
+    activations.forEach((layer, layerIndex) => {
+      const displayUnits = Array.isArray(layer[0]) ? layer : layer.map(v => [v]);
+      const mapping: number[][] = [];
+
+      displayUnits.forEach((_, i) => {
+        nodes.push({
+          layer: layerIndex,
+          index: i,
+          x: this.layoutVertical ? (i + 1) * neuronXGap : (layerIndex + 1) * layerXGap,
+          y: this.layoutVertical ? (layerIndex + 1) * layerYGap : (i + 1) * neuronYGap,
+          activation: 0
+        });
+        mapping.push([i]);
+      });
+
+      layerMapping.push(mapping);
+    });
+
+    // Connect adjacent layers
+    for (let l = 0; l < layerMapping.length - 1; l++) {
+      const fromLayer = nodes.filter(n => n.layer === l);
+      const toLayer = nodes.filter(n => n.layer === l + 1);
+      fromLayer.forEach(src => toLayer.forEach(tgt => links.push({
+        source: src,
+        target: tgt,
+        weight: Math.random() * 2 - 1
+      })));
+    }
+
+    return { nodes, links, layerMapping };
+  }
+
+  private renderLayout(layout: { nodes: Node[], links: Link[], layerMapping: number[][][] }) {
+    const { nodes, links } = layout;
+
+    // ---- Links with tooltip ----
+    this.svg.selectAll<SVGLineElement, Link>('.link')
+      .data(links, d => `${d.source.layer}-${d.source.index}-${d.target.layer}-${d.target.index}`)
+      .enter()
       .append('line')
       .attr('class', 'link')
       .attr('x1', d => d.source.x)
       .attr('y1', d => d.source.y)
       .attr('x2', d => d.target.x)
       .attr('y2', d => d.target.y)
-      .style('stroke', d => this.weightColorScale(d.weight))
-      .style('stroke-width', 1.5)
-      .append('title')
-      .text(d => `Weight: ${d.weight.toFixed(3)}`);
-
-    linkSel
-      .style('stroke', d => this.weightColorScale(d.weight));
-
-    linkSel.exit().remove();
-
-    // --- Nodes ---
-    const nodeSel = this.svg.selectAll<SVGGElement, any>('g.node-group')
-      .data(this.nodes, (d: any) => d.id);
-
-    const nodeEnter = nodeSel.enter()
-      .append('g')
-      .attr('class', 'node-group')
-      .attr('transform', d => `translate(${d.x},${d.y})`);
-
-    // halos
-    nodeEnter.append('circle')
-      .attr('class', 'halo')
-      .attr('r', 20)
-      .style('fill', d =>
-        this.useActivationColoring
-          ? this.activationColorScale(d.activation)
-          : this.weightColorScale(this.links.find(l => l.source.id === d.id || l.target.id === d.id)?.weight || 0)
-      )
-      .style('opacity', 0.2);
-
-    // nodes
-    nodeEnter.append('circle')
-      .attr('class', 'node')
-      .attr('r', 15)
-      .style('fill', d =>
-        this.useActivationColoring
-          ? this.activationColorScale(d.activation)
-          : this.weightColorScale(this.links.find(l => l.source.id === d.id || l.target.id === d.id)?.weight || 0)
-      )
-      .append('title')
-      .text(d => `Activation: ${d.activation.toFixed(3)}`);
-
-    nodeSel.select('circle.node')
-      .transition().duration(300)
-      .style('fill', d =>
-        this.useActivationColoring
-          ? this.activationColorScale(d.activation)
-          : this.weightColorScale(this.links.find(l => l.source.id === d.id || l.target.id === d.id)?.weight || 0)
-      );
-
-    nodeSel.exit().remove();
-
-    // --- Pulses ---
-    if (this.showPulses) {
-      const sessionAtSchedule = this.sessionId;
-      this.links.forEach(link => {
-        const startNode = this.passDirection === 'forward' ? link.source : link.target;
-        const endNode = this.passDirection === 'forward' ? link.target : link.source;
-
-        const act = startNode.activation;
-        if (act > 0.01) {
-          const r = 3 + 4 * act;
-
-          const pulse = this.svg.append('circle')
-            .attr('cx', startNode.x)
-            .attr('cy', startNode.y)
-            .attr('r', r)
-            .style('fill', this.weightColorScale(link.weight))
-            .style('opacity', 0.8);
-
-          pulse.transition()
-            .duration(this.pulseDuration)
-            .attr('cx', endNode.x)
-            .attr('cy', endNode.y)
-            .style('opacity', 0.1)
-            .remove()
-            .on('end', () => {
-              if (this.sessionId !== sessionAtSchedule) pulse.remove();
-            });
-        }
+      .attr('stroke', d => this.weightColorScale(d.weight))
+      .attr('stroke-width', 1)
+      .attr('opacity', 1)
+      .on('mouseover', (event, d) => {
+        this.tooltip
+          .style('opacity', 1)
+          .html(`Weight: ${d.weight.toFixed(3)}`)
+          .style('left', `${event.pageX + 10}px`)
+          .style('top', `${event.pageY - 20}px`);
+      })
+      .on('mousemove', (event) => {
+        this.tooltip
+          .style('left', `${event.pageX + 10}px`)
+          .style('top', `${event.pageY - 20}px`);
+      })
+      .on('mouseout', () => {
+        this.tooltip.style('opacity', 0);
       });
-    }
+
+    // ---- Nodes with tooltip ----
+    const nodeGroup = this.svg.selectAll<SVGGElement, Node>('.node-group')
+      .data(nodes, d => `${d.layer}-${d.index}`)
+      .enter()
+      .append('g')
+      .attr('class', 'node-group');
+
+    nodeGroup.append('circle')
+      .attr('class', 'halo')
+      .attr('cx', d => d.x)
+      .attr('cy', d => d.y)
+      .attr('r', 0)
+      .attr('opacity', 0);
+
+    nodeGroup.append('circle')
+      .attr('class', 'node')
+      .attr('cx', d => d.x)
+      .attr('cy', d => d.y)
+      .attr('r', 5)
+      .attr('opacity', 1)
+      .attr('fill', d => this.activationColorScale(d.activation))
+      .on('mouseover', (event, d) => {
+        this.tooltip
+          .style('opacity', 1)
+          .html(`Activation: ${d.activation.toFixed(3)}`)
+          .style('left', `${event.pageX + 10}px`)
+          .style('top', `${event.pageY - 20}px`);
+      })
+      .on('mousemove', (event, d) => {
+        this.tooltip
+          .html(`Activation: ${d.activation.toFixed(3)}`)
+          .style('left', `${event.pageX + 10}px`)
+          .style('top', `${event.pageY - 20}px`);
+      })
+      .on('mouseout', () => {
+        this.tooltip.style('opacity', 0);
+      });
+
+    // Save current layout
+    this._currentNodes = nodes;
+    this._currentLinks = links;
+    this._currentLayerMapping = layout.layerMapping;
   }
 
-  // ---- Playback control ----
-  async playActivations(creature: 'A' | 'B', speed = 200) {
-    const data = await this.battleService.getCreatureGraph(creature).toPromise();
-    const history = data.activations_history || [];
+  private updateGraph(
+    activations: number[][],
+    epoch: number | undefined,
+    layout: { nodes: Node[], links: Link[], layerMapping: number[][][] },
+    sessionAtSchedule: number
+  ) {
+    const { nodes, links, layerMapping } = layout;
 
-    for (let epoch = 0; epoch < history.length; epoch++) {
-      const epochData = history[epoch];
-      const activations = epochData.layers || [];
-      this.activations.set({ creature, epoch, activations });
-      await new Promise(resolve => setTimeout(resolve, speed));
+    // Update activations mapping
+    if (activations && activations.length > 0) {
+      activations.forEach((layer: number[], l: number) => {
+        const mapping = layerMapping[l];
+        mapping.forEach((indices: number[], i: number) => {
+          const node = nodes.find(n => n.layer === l && n.index === i);
+          if (node) node.activation = d3.mean(indices.map(idx => layer[idx])) ?? 0;
+        });
+      });
     }
+
+    // Update links
+    this.svg.selectAll<SVGLineElement, Link>('.link')
+      .data(links, d => `${d.source.layer}-${d.source.index}-${d.target.layer}-${d.target.index}`)
+      .attr('x1', d => d.source.x)   // geometry updates immediately
+      .attr('y1', d => d.source.y)
+      .attr('x2', d => d.target.x)
+      .attr('y2', d => d.target.y)
+      .transition()
+      .duration(this.easeDuration)
+      .ease(this.easeType)
+      .attr('stroke-width', d => 1 + Math.abs(d.source.activation - d.target.activation) * this.linkPulseScale)
+      .attr('opacity', d => Math.abs(d.source.activation - d.target.activation) * this.linkPulseOpacity)
+      .attr('stroke', d => this.weightColorScale(d.weight));
+
+    // Pulses (per epoch)
+    if (this.showPulses && this.passDirection !== 'none' && epoch !== undefined) {
+      const localSession = sessionAtSchedule;
+      links.forEach(d => {
+        const forward = this.passDirection === 'forward';
+        const xStart = forward ? d.source.x : d.target.x;
+        const yStart = forward ? d.source.y : d.target.y;
+        const xEnd = forward ? d.target.x : d.source.x;
+        const yEnd = forward ? d.target.y : d.source.y;
+        const act = forward ? Math.max(0, d.source.activation) : Math.max(0, d.target.activation);
+        const pulseColor = this.weightColorScale(d.weight);
+
+        const pulse = this.svg.append('circle')
+          .attr('class', 'pulse')
+          .attr('cx', xStart)
+          .attr('cy', yStart)
+          .attr('r', 3 + 4 * act)
+          .attr('fill', pulseColor)
+          .attr('opacity', 0.9);
+
+        pulse.transition()
+          .duration(this.pulseDuration)
+          // .duration(this.easeDuration)
+          .ease(this.easeType)
+          .attr('cx', xEnd)
+          .attr('cy', yEnd)
+          .attr('opacity', 0)
+          .on('end', () => {
+            if (localSession !== this.sessionId) {
+              try { pulse.remove(); } catch {}
+              return;
+            }
+            pulse.remove();
+          });
+      });
+    }
+
+    // Node transitions: halos and nodes update size/color & position
+    const nodeGroup = this.svg.selectAll<SVGGElement, Node>('.node-group')
+      .data(nodes, d => `${d.layer}-${d.index}`);
+
+    nodeGroup.select<SVGCircleElement>('.halo')
+      .transition()
+      .duration(this.easeDuration)
+      .ease(this.easeType)
+      .attr('r', d => d.activation > 0 ? this.haloRadius * d.activation : 0)
+      .attr('opacity', d => d.activation > 0.1 ? 1 : 0)
+      .attr('fill', d => this.activationColorScale(d.activation))
+      .attr('cx', d => d.x)
+      .attr('cy', d => d.y);
+
+    nodeGroup.select<SVGCircleElement>('.node')
+      .transition()
+      .duration(this.easeDuration)
+      .ease(this.easeType)
+      .attr('r', d => 5 + d.activation * 5)
+      .attr('fill', d => this.activationColorScale(d.activation))
+      .attr('cx', d => d.x)
+      .attr('cy', d => d.y);
   }
 }

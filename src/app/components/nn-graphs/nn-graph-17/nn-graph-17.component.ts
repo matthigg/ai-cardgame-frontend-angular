@@ -1,7 +1,7 @@
 import { Component, effect, ElementRef, Input, OnInit, ViewChild, WritableSignal, AfterViewInit, signal } from '@angular/core';
 import * as d3 from 'd3';
 import { Activations } from '../../../shared/models/activations.model';
-import { colorPalettes, paletteObj } from '../../../shared/utils/helper-functions.utils';
+import { colorPalettes, paletteObj } from '../../../shared/utils/utils';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
