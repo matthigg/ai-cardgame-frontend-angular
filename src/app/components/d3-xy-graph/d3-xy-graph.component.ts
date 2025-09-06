@@ -50,7 +50,6 @@ export class D3XyGraphComponent implements OnInit, AfterViewInit {
     effect(() => this.updateChart(this.logs()));
     effect(() => {
       this.updateChart(this.summaryData())
-      console.log('--- this.summaryData(): ', this.summaryData());
     });
   }
 

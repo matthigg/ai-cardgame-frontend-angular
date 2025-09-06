@@ -3,16 +3,11 @@
   <button (click)="onTrain('B')">Run Training Loop (Creature B)</button>
 </div>
 
-<app-d3-xy-graph 
+<!-- <app-d3-xy-graph 
   [logs]="logs"
   [statusMessages]="statusMessages"
   [summaryData]="summaryData"
-></app-d3-xy-graph>
-
-<div class="p-4">
-  <button (click)="onTrain('A')">Run Training Loop (Creature A)</button>
-  <button (click)="onTrain('B')">Run Training Loop (Creature B)</button>
-</div>
+></app-d3-xy-graph> -->
 
 <app-d3-bar-chart [summaryData]="summaryData"></app-d3-bar-chart>
 
@@ -21,5 +16,5 @@
   <button (click)="onTrain('B')">Run Training Loop (Creature B)</button>
 </div>
 
-<app-nn-graph-14 [activations]="activations"></app-nn-graph-14>
+<app-nn-graph-15 [activations]="activations"></app-nn-graph-15>
 

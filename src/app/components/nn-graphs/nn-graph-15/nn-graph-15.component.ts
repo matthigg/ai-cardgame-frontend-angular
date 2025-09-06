@@ -44,7 +44,7 @@ export const easingFunctions: { [key: string]: (t: number) => number } = {
 };
 
 @Component({
-  selector: 'app-nn-graph-14',
+  selector: 'app-nn-graph-15',
   template: `
     <div style="margin-bottom: 8px;">
       <button (click)="toggleShowWeights()">
@@ -70,7 +70,7 @@ export const easingFunctions: { [key: string]: (t: number) => number } = {
     }
   `]
 })
-export class NnGraph14Component implements OnInit {
+export class NnGraph15Component implements OnInit {
   @ViewChild('svgRef', { static: true }) svgRef!: ElementRef<SVGSVGElement>;
 
   @Input({ required: true }) activations!: WritableSignal<{ epoch: number, activations: number[][] } | null>;

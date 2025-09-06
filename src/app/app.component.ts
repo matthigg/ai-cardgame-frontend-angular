@@ -5,6 +5,7 @@ import { BattleService } from './services/battle/battle.service';
 import { D3XyGraphComponent } from './components/d3-xy-graph/d3-xy-graph.component';
 import { D3BarChartComponent } from './components/d3-bar-chart/d3-bar-chart.component';
 import { NnGraph14Component } from './components/nn-graphs/nn-graph-14/nn-graph-14.component';
+import { NnGraph15Component } from './components/nn-graphs/nn-graph-15/nn-graph-15.component';
 
 @Component({
   selector: 'app-root',
@@ -12,7 +13,7 @@ import { NnGraph14Component } from './components/nn-graphs/nn-graph-14/nn-graph-
     CommonModule,
     D3BarChartComponent,
     D3XyGraphComponent,
-    NnGraph14Component
+    NnGraph15Component
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
