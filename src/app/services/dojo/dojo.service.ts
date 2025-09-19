@@ -60,7 +60,7 @@ export class DojoService {
       // Wait for training loop to finish on server
       const playerData = this.dojoFormGroup.get('playerFC')?.value;
       const enemyData = this.dojoFormGroup.get('enemyFC')?.value;
-      const result = await this.battleService.getTrain(playerData, enemyData).pipe(take(1)).toPromise();
+      const result = await this.battleService.postTrain(playerData, enemyData).pipe(take(1)).toPromise();
 
       this.summaryData.set(result.summary);
       this.addStatusMessage('Training completed! Fetching activations...');
@@ -99,7 +99,7 @@ export class DojoService {
     try {
       const playerData = this.dojoFormGroup.get('playerFC')?.value;
       const enemyData = this.dojoFormGroup.get('enemyFC')?.value;
-      const data = await this.battleService.getCreatureGraph(playerData, enemyData).toPromise();
+      const data = await this.battleService.postNNGraph(playerData, enemyData).toPromise();
       if (myId !== this.playbackId) {
         this.isPlaying.set(false); // 🔹 canceled while fetching
         return;
