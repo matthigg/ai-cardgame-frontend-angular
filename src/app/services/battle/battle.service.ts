@@ -18,7 +18,7 @@ export class BattleService {
     return this.http.get(`${this.apiUrl}/summary`);
   }
 
-  getCreatureGraph(creature: 'A' | 'B'): Observable<any> {
+  getCreatureGraph(creature: string): Observable<any> {
     return this.http.get(`${this.apiUrl}/nn-graph`);
   }
 

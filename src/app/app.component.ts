@@ -37,7 +37,7 @@ export class AppComponent {
   constructor() {}
 
   // ------------------ Training ------------------
-  async onTrain(creature: 'A' | 'B', playbackSpeed = this.defaultSpeed) {
+  async onTrain(creature: string, playbackSpeed = this.defaultSpeed) {
     this.isTraining.set(true);                     // 🔹 spinner on
     this.addStatusMessage('Training started...');
 
@@ -63,7 +63,7 @@ export class AppComponent {
 
   // ------------------ Creature switches ------------------
   // Call this when the user switches which creature to view.
-  async onShowCreature(creature: 'A' | 'B', speed = this.defaultSpeed) {
+  async onShowCreature(creature: string, speed = this.defaultSpeed) {
     this.stopPlayback();                 // Cancel any in-flight loop
     await this.playActivations(creature, speed);
   }
@@ -74,7 +74,7 @@ export class AppComponent {
   }
 
   // ------------------ Playback ------------------
-  async playActivations(creature: 'A' | 'B', speed = this.defaultSpeed) {
+  async playActivations(creature: string, speed = this.defaultSpeed) {
     // Capture a local id to detect cancellation
     const myId = ++this.playbackId;
     this.isPlaying.set(true); // 🔹 playback started
@@ -86,7 +86,8 @@ export class AppComponent {
         return;
       }
 
-      const history = data.activations_history || [];
+      // const history = data.activations_history || [];
+      const history = data[creature].activations_history || [];
 
       for (let epoch = 0; epoch < history.length; epoch++) {
         if (myId !== this.playbackId) {
