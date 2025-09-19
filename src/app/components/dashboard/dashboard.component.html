@@ -1,0 +1,24 @@
+<mat-sidenav-container>
+  <mat-sidenav #sidenav mode="side" opened>
+    <div>
+      <button (click)="onTrain('Bear')">Run Training Loop (Bear)</button>
+    </div>
+  </mat-sidenav>
+
+  <mat-sidenav-content>
+
+    <button matButton (click)="sidenav.toggle()">sidenav.toggle()</button>
+
+    <app-d3-bar-chart [summaryData]="summaryData"></app-d3-bar-chart>
+
+    <app-nn-graph-19 
+      [activations]="activations"
+      [isPlaying]="isPlaying"
+      (layoutToggled)="onLayoutToggled($event)"
+    ></app-nn-graph-19>
+  </mat-sidenav-content>
+</mat-sidenav-container>
+
+<div *ngIf="isTraining()" class="spinner-overlay">
+  <div class="spinner"></div>
+</div>
