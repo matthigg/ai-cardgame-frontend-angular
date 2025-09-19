@@ -1,0 +1,11 @@
+<app-d3-bar-chart [summaryData]="dojoService.summaryData"></app-d3-bar-chart>
+
+<app-nn-graph-19 
+  [activations]="dojoService.activations"
+  [isPlaying]="dojoService.isPlaying"
+  (layoutToggled)="dojoService.onLayoutToggled($event)"
+></app-nn-graph-19>
+
+<div *ngIf="dojoService.isTraining()" class="spinner-overlay">
+  <div class="spinner"></div>
+</div>
