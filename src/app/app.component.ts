@@ -6,6 +6,7 @@ import { BattleService } from './services/battle/battle.service';
 import { D3BarChartComponent } from './components/d3-bar-chart/d3-bar-chart.component';
 import { NnGraph18Component } from './components/nn-graphs/nn-graph-18/nn-graph-18.component';
 import { NnGraph19Component } from './components/nn-graphs/nn-graph-19/nn-graph-19.component';
+import { DojoService } from './services/dojo/dojo.service';
 
 @Component({
   selector: 'app-root',
@@ -27,6 +28,7 @@ export class AppComponent {
   private statusMessageLength = 5;
 
   private battleService: BattleService = inject(BattleService);
+  private dojoService: DojoService = inject(DojoService)
 
   // ---- Playback cancellation guard ----
   private playbackId = 0;        // increments to cancel any in-flight playback
