@@ -2,6 +2,7 @@ import { inject, Injectable, signal, WritableSignal } from '@angular/core';
 import { Activations } from '../../shared/models/activations.model';
 import { BattleService } from '../battle/battle.service';
 import { take } from 'rxjs';
+import { FormBuilder, FormGroup } from '@angular/forms';
 
 @Injectable({
   providedIn: 'root'
@@ -25,6 +26,13 @@ export class DojoService {
       creatureID: 21,
     }
   ];
+
+  public fb = inject(FormBuilder);
+
+  public dojoFormGroup: FormGroup = this.fb.group({
+    playerFC: null,
+    enemyFC: null,
+  });
   
   activations: WritableSignal<Activations | null> = signal(null);
   logs: WritableSignal<any> = signal([]);
@@ -50,7 +58,9 @@ export class DojoService {
 
     try {
       // Wait for training loop to finish on server
-      const result = await this.battleService.getTrain().pipe(take(1)).toPromise();
+      const playerData = this.dojoFormGroup.get('playerFC')?.value;
+      const enemyData = this.dojoFormGroup.get('enemyFC')?.value;
+      const result = await this.battleService.getTrain(playerData, enemyData).pipe(take(1)).toPromise();
 
       this.summaryData.set(result.summary);
       this.addStatusMessage('Training completed! Fetching activations...');
@@ -87,13 +97,14 @@ export class DojoService {
     this.isPlaying.set(true); // 🔹 playback started
 
     try {
-      const data = await this.battleService.getCreatureGraph(creature).toPromise();
+      const playerData = this.dojoFormGroup.get('playerFC')?.value;
+      const enemyData = this.dojoFormGroup.get('enemyFC')?.value;
+      const data = await this.battleService.getCreatureGraph(playerData, enemyData).toPromise();
       if (myId !== this.playbackId) {
         this.isPlaying.set(false); // 🔹 canceled while fetching
         return;
       }
 
-      // const history = data.activations_history || [];
       const history = data[creature].activations_history || [];
 
       for (let epoch = 0; epoch < history.length; epoch++) {
