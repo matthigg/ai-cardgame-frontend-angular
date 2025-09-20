@@ -30,8 +30,8 @@ export class DojoService {
   public fb = inject(FormBuilder);
 
   public dojoFormGroup: FormGroup = this.fb.group({
-    playerFC: null,
-    enemyFC: null,
+    playerFC: this.playerCreatures,
+    enemyFC: this.enemyCreatures,
   });
   
   activations: WritableSignal<Activations | null> = signal(null);
