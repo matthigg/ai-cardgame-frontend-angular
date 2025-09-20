@@ -1,4 +1,239 @@
-/* You can add global styles to this file, and also import other style files */
+@use '@angular/material' as mat;
+@use '../theme-colors' as my-theme;
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+// html {
+//   @include mat.theme((
+//     color: (
+//       primary: my-theme.$primary-palette,
+//       tertiary: my-theme.$tertiary-palette,
+//     ),
+//     typography: Roboto,
+//     density: 0,
+//   ));
+
+//   @media (prefers-contrast: more) {
+//     @include my-theme.high-contrast-overrides(dark);
+//   }
+// }
+
+.red-theme-light {
+  color-scheme: light;
+  @include mat.theme((
+    color: mat.$red-palette,
+    typography: Roboto,
+    density: 0
+  ));
+}
+
+.green-theme-light {
+  color-scheme: light;
+  @include mat.theme((
+    color: mat.$green-palette,
+    typography: Roboto,
+    density: 0
+  ));
+}
+
+.blue-theme-light {
+  color-scheme: light;
+  @include mat.theme((
+    color: mat.$blue-palette,
+    typography: Roboto,
+    density: 0
+  ));
+}
+
+.yellow-theme-light {
+  color-scheme: light;
+  @include mat.theme((
+    color: mat.$yellow-palette,
+    typography: Roboto,
+    density: 0
+  ));
+}
+
+.cyan-theme-light {
+  color-scheme: light;
+  @include mat.theme((
+    color: mat.$cyan-palette,
+    typography: Roboto,
+    density: 0
+  ));
+}
+
+.magenta-theme-light {
+  color-scheme: light;
+  @include mat.theme((
+    color: mat.$magenta-palette,
+    typography: Roboto,
+    density: 0
+  ));
+}
+
+.orange-theme-light {
+  color-scheme: light;
+  @include mat.theme((
+    color: mat.$orange-palette,
+    typography: Roboto,
+    density: 0
+  ));
+}
+
+.chartreuse-theme-light {
+  color-scheme: light;
+  @include mat.theme((
+    color: mat.$chartreuse-palette,
+    typography: Roboto,
+    density: 0
+  ));
+}
+
+.spring-green-theme-light {
+  color-scheme: light;
+  @include mat.theme((
+    color: mat.$spring-green-palette,
+    typography: Roboto,
+    density: 0
+  ));
+}
+
+.azure-theme-light {
+  color-scheme: light;
+  @include mat.theme((
+    color: mat.$azure-palette,
+    typography: Roboto,
+    density: 0
+  ));
+}
+
+.violet-theme-light {
+  color-scheme: light;
+  @include mat.theme((
+    color: mat.$violet-palette,
+    typography: Roboto,
+    density: 0
+  ));
+}
+
+.rose-theme-light {
+  color-scheme: light;
+  @include mat.theme((
+    color: mat.$rose-palette,
+    typography: Roboto,
+    density: 0
+  ));
+}
+
+.red-theme-dark {
+  color-scheme: dark;
+  @include mat.theme((
+    color: mat.$red-palette,
+    typography: Roboto,
+    density: 0
+  ));
+}
+
+.green-theme-dark {
+  color-scheme: dark;
+  @include mat.theme((
+    color: mat.$green-palette,
+    typography: Roboto,
+    density: 0
+  ));
+}
+
+.blue-theme-dark {
+  color-scheme: dark;
+  @include mat.theme((
+    color: mat.$blue-palette,
+    typography: Roboto,
+    density: 0
+  ));
+}
+
+.yellow-theme-dark {
+  color-scheme: dark;
+  @include mat.theme((
+    color: mat.$yellow-palette,
+    typography: Roboto,
+    density: 0
+  ));
+}
+
+.cyan-theme-dark {
+  color-scheme: dark;
+  @include mat.theme((
+    color: mat.$cyan-palette,
+    typography: Roboto,
+    density: 0
+  ));
+}
+
+.magenta-theme-dark {
+  color-scheme: dark;
+  @include mat.theme((
+    color: mat.$magenta-palette,
+    typography: Roboto,
+    density: 0
+  ));
+}
+
+.orange-theme-dark {
+  color-scheme: dark;
+  @include mat.theme((
+    color: mat.$orange-palette,
+    typography: Roboto,
+    density: 0
+  ));
+}
+
+.chartreuse-theme-dark {
+  color-scheme: dark;
+  @include mat.theme((
+    color: mat.$chartreuse-palette,
+    typography: Roboto,
+    density: 0
+  ));
+}
+
+.spring-green-theme-dark {
+  color-scheme: dark;
+  @include mat.theme((
+    color: mat.$spring-green-palette,
+    typography: Roboto,
+    density: 0
+  ));
+}
+
+.azure-theme-dark {
+  color-scheme: dark;
+  @include mat.theme((
+    color: mat.$azure-palette,
+    typography: Roboto,
+    density: 0
+  ));
+}
+
+.violet-theme-dark {
+  color-scheme: dark;
+  @include mat.theme((
+    color: mat.$violet-palette,
+    typography: Roboto,
+    density: 0
+  ));
+}
+
+.rose-theme-dark {
+  color-scheme: dark;
+  @include mat.theme((
+    color: mat.$rose-palette,
+    typography: Roboto,
+    density: 0
+  ));
+}
+
+
+

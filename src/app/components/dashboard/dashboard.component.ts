@@ -4,12 +4,14 @@ import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule }
 import { RouterModule } from '@angular/router';
 
 import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSidenavModule } from '@angular/material/sidenav';
 
 import { DojoService } from '../../services/dojo/dojo.service';
+import { ColorThemeService } from '../../services/color-theme/color-theme.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -17,6 +19,7 @@ import { DojoService } from '../../services/dojo/dojo.service';
     CommonModule,
     FormsModule,
     MatButtonModule,
+    MatCheckboxModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
@@ -29,4 +32,28 @@ import { DojoService } from '../../services/dojo/dojo.service';
 })
 export class DashboardComponent {
   public dojoService: DojoService = inject(DojoService);
+  public colorThemeService: ColorThemeService = inject(ColorThemeService);
+
+  playerCreatureName: string = '';
+
+  ngOnInit(): void {
+    this.playerCreatureName = this.dojoService.dojoFormGroup.get('playerFC')
+      ?.value
+      ?.creatureName;
+    
+    this.dojoService.dojoFormGroup.get('playerFC')
+      ?.valueChanges
+      ?.subscribe(response => {
+        this.playerCreatureName = response;
+      });
+  }
+
+  get colorThemeFC(): FormControl {
+    return this.colorThemeService.colorThemeFormGroup.get('colorThemeFC') as FormControl;
+  }
+
+  get lightOrDarkFC(): FormControl {
+    return this.colorThemeService.colorThemeFormGroup.get('lightOrDarkFC') as FormControl;
+  }
+
 }

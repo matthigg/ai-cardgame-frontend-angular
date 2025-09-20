@@ -1,26 +1,52 @@
 <mat-sidenav-container>
   <mat-sidenav #sidenav mode="side" opened>
     <div>
-      <button mat-button (click)="dojoService.onTrain('Bear')">Run Training Loop (Bear)</button>
+      <mat-form-field [formGroup]="colorThemeService.colorThemeFormGroup">
+        <mat-label>Color Theme</mat-label>
+        <mat-select 
+        formControlName="colorThemeFC"
+        (selectionChange)="colorThemeService.setTheme(
+          $event.value,
+          lightOrDarkFC.value ? 'dark' : 'light'
+        )">
+          @for (theme of colorThemeService.themes; track theme) {
+            <mat-option [value]="theme"> {{ theme }} </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-checkbox 
+        [formControl]="lightOrDarkFC" 
+        (change)="colorThemeService.setTheme(
+          colorThemeFC.value,
+          lightOrDarkFC.value ? 'dark' : 'light'
+        )"
+      >
+        {{ lightOrDarkFC.value ? 'Dark' : 'Light' }}
+      </mat-checkbox>
+
+      <button mat-button (click)="dojoService.onTrain(playerCreatureName)">
+        Run Training Loop ({{ playerCreatureName }})
+      </button>
+
+      <mat-form-field [formGroup]="dojoService.dojoFormGroup">
+        <mat-label>Player</mat-label>
+        <mat-select formControlName="playerFC">
+          @for (pc of dojoService.playerCreatures; track pc) {
+            <mat-option [value]="pc"> {{ pc.playerName }} - {{ pc.creatureName }} </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field [formGroup]="dojoService.dojoFormGroup">
+        <mat-label>Enemy</mat-label>
+        <mat-select formControlName="enemyFC">
+          @for (ec of dojoService.enemyCreatures; track ec) {
+            <mat-option [value]="ec"> {{ ec.playerName }} - {{ ec.creatureName }} </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
     </div>
-
-    <mat-form-field [formGroup]="dojoService.dojoFormGroup">
-      <mat-label>Player</mat-label>
-      <mat-select formControlName="playerFC">
-        @for (pc of dojoService.playerCreatures; track pc) {
-          <mat-option [value]="pc"> {{ pc.playerName }} - {{ pc.creatureName }} </mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
-
-    <mat-form-field [formGroup]="dojoService.dojoFormGroup">
-      <mat-label>Enemy</mat-label>
-      <mat-select formControlName="enemyFC">
-        @for (ec of dojoService.enemyCreatures; track ec) {
-          <mat-option [value]="ec"> {{ ec.playerName }} - {{ ec.creatureName }} </mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
   </mat-sidenav>
 
   <mat-sidenav-content>
