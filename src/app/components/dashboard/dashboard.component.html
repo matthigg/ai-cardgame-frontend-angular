@@ -50,7 +50,12 @@
   </mat-sidenav>
 
   <mat-sidenav-content>
-    <button matButton (click)="sidenav.toggle()">sidenav.toggle()</button>
+
+    <app-sidenav-toggle
+      [open]="true"
+      (toggle)="sidenav.toggle()"
+      class="my-toggle"
+    ></app-sidenav-toggle>
 
     <router-outlet></router-outlet>
 

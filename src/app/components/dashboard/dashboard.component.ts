@@ -12,6 +12,7 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 
 import { DojoService } from '../../services/dojo/dojo.service';
 import { ColorThemeService } from '../../services/color-theme/color-theme.service';
+import { SidenavToggleComponent } from '../sidenav-toggle-button/sidenav-toggle-button.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -26,6 +27,7 @@ import { ColorThemeService } from '../../services/color-theme/color-theme.servic
     MatSidenavModule,
     ReactiveFormsModule,
     RouterModule,
+    SidenavToggleComponent,
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'

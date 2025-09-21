@@ -1,0 +1,25 @@
+:host { display: inline-block; line-height: 0; }
+.toggle-root {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  cursor: pointer;
+  outline: none;
+  /* color pulled from theme; fallbacks provided below */
+  color: var(--sidenav-toggle-color, currentColor);
+  transition: background-color .15s ease;
+}
+.toggle-root:focus,
+.toggle-root:hover {
+  background: rgba(0,0,0,0.06);
+}
+/* Make hover darker in dark theme if desired; theme can override --sidenav-toggle-hover */
+.toggle-root:focus,
+.toggle-root:hover {
+  background: var(--sidenav-toggle-hover, rgba(0,0,0,0.06));
+}
+svg { width: 24px; height: 24px; display: block; }
+path { fill: currentColor; }
