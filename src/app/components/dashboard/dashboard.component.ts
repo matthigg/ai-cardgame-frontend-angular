@@ -1,6 +1,6 @@
-import { Component, inject, signal, WritableSignal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 
 import { MatButtonModule } from '@angular/material/button';
@@ -13,6 +13,7 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { DojoService } from '../../services/dojo/dojo.service';
 import { ColorThemeService } from '../../services/color-theme/color-theme.service';
 import { SidenavToggleComponent } from '../sidenav-toggle-button/sidenav-toggle-button.component';
+import { NavbarComponent } from '../navbar/navbar.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -25,6 +26,7 @@ import { SidenavToggleComponent } from '../sidenav-toggle-button/sidenav-toggle-
     MatInputModule,
     MatSelectModule,
     MatSidenavModule,
+    NavbarComponent,
     ReactiveFormsModule,
     RouterModule,
     SidenavToggleComponent,
