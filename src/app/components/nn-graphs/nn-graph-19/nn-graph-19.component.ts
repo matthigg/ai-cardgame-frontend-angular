@@ -455,7 +455,10 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
       .duration(this.easeDuration)
       .ease(this.easeType)
       .attr('stroke-width', d => 1 + Math.abs(d.source.activation - d.target.activation) * this.linkPulseScale)
-      .attr('opacity', d => Math.abs(d.source.activation - d.target.activation) * this.linkPulseOpacity)
+      // .attr('opacity', d => Math.abs(d.source.activation + d.target.activation) * this.linkPulseOpacity)
+      // .attr('opacity', d => Math.abs(d.source.activation * d.target.activation) * this.linkPulseOpacity)
+      .attr('opacity', d => Math.min(1, (d.source.activation + d.target.activation)) * this.linkPulseOpacity)
+      // .attr('opacity', d => Math.min(1, (d.source.activation * d.target.activation)) * this.linkPulseOpacity)
       .attr('stroke', d => this.weightColorScale(d.weight));
 
     // Pulses (per epoch)

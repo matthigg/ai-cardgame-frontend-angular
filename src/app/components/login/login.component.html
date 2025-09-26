@@ -1,0 +1,12 @@
+<div id="login-wrapper">
+  <mat-form-field [formGroup]="loginFG">
+    <mat-label>Name</mat-label>
+    <input formControlName="name" matInput value="">
+  </mat-form-field>
+
+  <br><br>
+  
+  <button mat-button (click)="login(loginFG.get('name')?.value)">
+    Login
+  </button>
+</div>

@@ -7,26 +7,20 @@ import { TrainModel } from '../../shared/models/train.model';
   providedIn: 'root'
 })
 export class BattleService {
-  private apiUrl = 'http://127.0.0.1:8000/battle';
+  private urlBattle = 'http://127.0.0.1:8000/battle';
+  private urlPlayer = 'http://127.0.0.1:8000/player';
 
   constructor(private http: HttpClient) {}
 
-  postTrain(playerData: TrainModel, enemyData: TrainModel): Observable<any> {
-    const body = {
-      player_name_A: playerData.playerName,
-      player_id_A: playerData.playerID,
-      creature_name_A: playerData.creatureName,
-      creature_id_A: playerData.creatureID,
-      player_name_B: enemyData.playerName,
-      player_id_B: enemyData.playerID,
-      creature_name_B: enemyData.creatureName,
-      creature_id_B: enemyData.creatureID,
-    };
-    return this.http.post(`${this.apiUrl}/train`, body);
+  getSummary(): Observable<any> {
+    return this.http.get(`${this.urlBattle}/summary`);
   }
 
-  getSummary(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/summary`);
+  postLogin(playerName: string): Observable<any> {
+    const body = {
+      name: playerName,
+    }
+    return this.http.post(`${this.urlPlayer}/login`, body);
   }
 
   postNNGraph(playerData: TrainModel, enemyData: TrainModel): Observable<any> {
@@ -40,6 +34,20 @@ export class BattleService {
       creature_name_B: enemyData.creatureName,
       creature_id_B: enemyData.creatureID,
     };
-    return this.http.post(`${this.apiUrl}/nn-graph`, body);
+    return this.http.post(`${this.urlBattle}/nn-graph`, body);
+  }
+
+  postTrain(playerData: TrainModel, enemyData: TrainModel): Observable<any> {
+    const body = {
+      player_name_A: playerData.playerName,
+      player_id_A: playerData.playerID,
+      creature_name_A: playerData.creatureName,
+      creature_id_A: playerData.creatureID,
+      player_name_B: enemyData.playerName,
+      player_id_B: enemyData.playerID,
+      creature_name_B: enemyData.creatureName,
+      creature_id_B: enemyData.creatureID,
+    };
+    return this.http.post(`${this.urlBattle}/train`, body);
   }
 }
