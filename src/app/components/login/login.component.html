@@ -1,12 +1,39 @@
 <div id="login-wrapper">
   <mat-form-field [formGroup]="loginFG">
-    <mat-label>Name</mat-label>
-    <input formControlName="name" matInput value="">
+    <mat-label>Login Name</mat-label>
+    <input formControlName="loginName" matInput value="">
   </mat-form-field>
 
-  <br><br>
-  
-  <button mat-button (click)="login(loginFG.get('name')?.value)">
+  <br>
+
+  <button mat-button (click)="login(loginFG.get('loginName')?.value)">
     Login
+  </button>
+
+  <br>
+
+  <mat-form-field [formGroup]="loginFG">
+    <mat-label>New Player Name</mat-label>
+    <input formControlName="createPlayerName" matInput value="">
+  </mat-form-field>
+
+  <br>
+
+  <mat-form-field [formGroup]="loginFG">
+    <mat-label>New Player Creature</mat-label>
+    <mat-select formControlName="createCreature">
+      @for (creatureName of Object.keys(creatureTemplate); track creatureName) {
+        <mat-option [value]="creatureName"> {{ creatureName }} </mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <br>
+
+  <button mat-button (click)="create(
+    loginFG.get('createPlayerName')?.value, 
+    loginFG.get('createCreature')?.value
+  )">
+    Create
   </button>
 </div>

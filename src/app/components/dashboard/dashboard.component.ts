@@ -41,11 +41,13 @@ export class DashboardComponent {
   playerCreatureName: string = '';
 
   ngOnInit(): void {
-    this.playerCreatureName = this.dojoService.dojoFormGroup.get('playerFC')
+    this.playerCreatureName = this.dojoService.dojoFormGroup
+      ?.get('playerFC')
       ?.value
       ?.creatureName;
     
-    this.dojoService.dojoFormGroup.get('playerFC')
+    this.dojoService.dojoFormGroup
+      ?.get('playerFC')
       ?.valueChanges
       ?.subscribe(response => {
         this.playerCreatureName = response;
