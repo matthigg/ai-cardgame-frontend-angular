@@ -1,5 +1,4 @@
 <mat-toolbar id="login-wrapper">
-  <!-- <mat-tab label="Login"> -->
     <mat-card id="login-card" appearance="outlined">
       <mat-card-header>
         <mat-card-title>Login</mat-card-title>
@@ -10,6 +9,10 @@
           <mat-label>Login Name</mat-label>
           <input formControlName="loginName" matInput value="">
         </mat-form-field>
+        
+        <div class="error-message" *ngIf="errorMessageLogin()">
+          * {{ errorMessageLogin()?.error?.detail }}
+        </div>
       </mat-card-content>
 
       <mat-card-actions>
@@ -18,9 +21,7 @@
         </button>
       </mat-card-actions>
     </mat-card>
-  <!-- </mat-tab> -->
 
-  <!-- <mat-tab label="Create new Player"> -->
     <mat-card id="new-player-card" appearance="outlined">
       <mat-card-header>
         <mat-card-title>Create New Player</mat-card-title>
@@ -42,6 +43,10 @@
             }
           </mat-select>
         </mat-form-field>
+
+        <div class="error-message" *ngIf="errorMessageCreate()">
+          * {{ errorMessageCreate()?.error?.detail }}
+        </div>
       </mat-card-content>
 
       <mat-card-actions>
@@ -53,5 +58,4 @@
         </button>
       </mat-card-actions>
     </mat-card>
-  <!-- </mat-tab> -->
 </mat-toolbar>

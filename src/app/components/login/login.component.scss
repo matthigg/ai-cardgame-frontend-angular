@@ -11,5 +11,11 @@
         margin-bottom: 2rem;
       }
     }
+
+    & mat-card-content {
+      & .error-message {
+        font-size: 1rem;
+      }
+    }
   }
 }

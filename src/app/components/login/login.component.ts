@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, WritableSignal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -11,10 +11,12 @@ import { take } from 'rxjs';
 import { BattleService } from '../../services/battle/battle.service';
 import { ColorThemeService } from '../../services/color-theme/color-theme.service';
 import { Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-login',
   imports: [
+    CommonModule,
     FormsModule,
     MatButtonModule,
     MatCardModule,
@@ -41,7 +43,9 @@ export class LoginComponent implements OnInit {
   });
 
   creatureTemplate = {};
-  errorMessage = signal(null);
+  errorMessageCreate: WritableSignal<{ error: { detail: string } } | null> = signal(null);
+  errorMessageGetCreatures: WritableSignal<{ error: { detail: string } } | null> = signal(null);
+  errorMessageLogin: WritableSignal<{ error: { detail: string } } | null> = signal(null);
   loggedInUser = {};
   Object = Object;
 
@@ -50,10 +54,16 @@ export class LoginComponent implements OnInit {
 
     this.battleService.getCreatures()
       .pipe(take(1))
-      .subscribe(response => {
-        console.log('--- creature tempalte response: ', response);
-        this.creatureTemplate = response;
-      });
+      .subscribe(
+        response => {
+          console.log('--- creature tempalte response: ', response);
+          this.creatureTemplate = response;
+        },
+        error => {
+          console.log('--- get creatures error: ', error);
+          this.errorMessageGetCreatures.set(error);
+        }
+      );
   }
 
   create(playerName: string | undefined | null, creature: string | undefined | null): any {
@@ -68,6 +78,7 @@ export class LoginComponent implements OnInit {
           },
           error => {
             console.log('--- create error: ', error);
+            this.errorMessageCreate.set(error);
           }
         ); 
     }
@@ -77,10 +88,16 @@ export class LoginComponent implements OnInit {
     if (playerName) {
       this.battleService.postLogin(playerName)
         .pipe(take(1))
-        .subscribe(response => {
-          console.log('--- login response: ', response);
-          this.router.navigate(['/dojo']);
-        });
+        .subscribe(
+          response => {
+            console.log('--- login response: ', response);
+            this.router.navigate(['/dojo']);
+          },
+          error => {
+            console.log('--- login error: ', error);
+            this.errorMessageLogin.set(error)
+          }
+        );
     }
   }
 }
