@@ -7,10 +7,10 @@
       <mat-form-field [formGroup]="colorThemeService.colorThemeFormGroup">
         <mat-label>Color Theme</mat-label>
         <mat-select 
-        formControlName="colorThemeFC"
-        (selectionChange)="colorThemeService.setTheme(
-          $event.value,
-          lightOrDarkFC.value ? 'dark' : 'light'
+          formControlName="colorThemeFC"
+          (selectionChange)="colorThemeService.setTheme(
+            $event.value,
+            lightOrDarkFC.value ? 'dark' : 'light'
         )">
           @for (theme of colorThemeService.themes; track theme) {
             <mat-option [value]="theme"> {{ theme }} </mat-option>

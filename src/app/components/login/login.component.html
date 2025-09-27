@@ -1,39 +1,57 @@
-<div id="login-wrapper">
-  <mat-form-field [formGroup]="loginFG">
-    <mat-label>Login Name</mat-label>
-    <input formControlName="loginName" matInput value="">
-  </mat-form-field>
+<mat-toolbar id="login-wrapper">
+  <!-- <mat-tab label="Login"> -->
+    <mat-card id="login-card" appearance="outlined">
+      <mat-card-header>
+        <mat-card-title>Login</mat-card-title>
+      </mat-card-header>
 
-  <br>
+      <mat-card-content>
+        <mat-form-field [formGroup]="loginFG">
+          <mat-label>Login Name</mat-label>
+          <input formControlName="loginName" matInput value="">
+        </mat-form-field>
+      </mat-card-content>
 
-  <button mat-button (click)="login(loginFG.get('loginName')?.value)">
-    Login
-  </button>
+      <mat-card-actions>
+        <button mat-button (click)="login(loginFG.get('loginName')?.value)">
+          Login
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  <!-- </mat-tab> -->
 
-  <br>
+  <!-- <mat-tab label="Create new Player"> -->
+    <mat-card id="new-player-card" appearance="outlined">
+      <mat-card-header>
+        <mat-card-title>Create New Player</mat-card-title>
+      </mat-card-header>
 
-  <mat-form-field [formGroup]="loginFG">
-    <mat-label>New Player Name</mat-label>
-    <input formControlName="createPlayerName" matInput value="">
-  </mat-form-field>
+      <mat-card-content>
+        <mat-form-field [formGroup]="loginFG">
+          <mat-label>New Player Name</mat-label>
+          <input formControlName="createPlayerName" matInput value="">
+        </mat-form-field>
 
-  <br>
+        <br>
 
-  <mat-form-field [formGroup]="loginFG">
-    <mat-label>New Player Creature</mat-label>
-    <mat-select formControlName="createCreature">
-      @for (creatureName of Object.keys(creatureTemplate); track creatureName) {
-        <mat-option [value]="creatureName"> {{ creatureName }} </mat-option>
-      }
-    </mat-select>
-  </mat-form-field>
+        <mat-form-field [formGroup]="loginFG">
+          <mat-label>Select Creature</mat-label>
+          <mat-select formControlName="createCreature">
+            @for (creatureName of Object.keys(creatureTemplate); track creatureName) {
+              <mat-option [value]="creatureName"> {{ creatureName }} </mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </mat-card-content>
 
-  <br>
-
-  <button mat-button (click)="create(
-    loginFG.get('createPlayerName')?.value, 
-    loginFG.get('createCreature')?.value
-  )">
-    Create
-  </button>
-</div>
+      <mat-card-actions>
+        <button mat-button (click)="create(
+          loginFG.get('createPlayerName')?.value, 
+          loginFG.get('createCreature')?.value
+        )">
+          Create
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  <!-- </mat-tab> -->
+</mat-toolbar>

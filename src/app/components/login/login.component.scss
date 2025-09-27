@@ -1,4 +1,15 @@
 #login-wrapper {
-  height: calc(100vh - 10rem);
+  display: flex;
+  height: 100vh;
+  justify-content: space-around;
   padding: 2rem;
+  & #login-card, #new-player-card {
+    height: fit-content;
+    width: 250px;
+    & mat-card-header {
+      & mat-card-title {
+        margin-bottom: 2rem;
+      }
+    }
+  }
 }
