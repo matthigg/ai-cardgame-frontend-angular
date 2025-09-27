@@ -50,7 +50,7 @@ export class DashboardComponent {
       ?.get('playerFC')
       ?.valueChanges
       ?.subscribe(response => {
-        this.playerCreatureName = response;
+        this.playerCreatureName = response.creatureName;
       });
   }
 

@@ -3,20 +3,15 @@ import { Activations } from '../../shared/models/activations.model';
 import { BattleService } from '../battle/battle.service';
 import { take } from 'rxjs';
 import { FormBuilder, FormGroup } from '@angular/forms';
+import { LoginService } from '../login/login.service';
+import { TrainModel } from '../../shared/models/train.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DojoService {
 
-  playerCreatures = [
-    {
-      playerName: 'Alice',
-      playerID: 1,
-      creatureName: 'Bear',
-      creatureID: 11,
-    }
-  ];
+  playerCreatures: TrainModel[] = [];
 
   enemyCreatures = [
     {
