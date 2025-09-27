@@ -18,4 +18,7 @@ import { DojoService } from '../../services/dojo/dojo.service';
 })
 export class DojoComponent {
   public dojoService: DojoService = inject(DojoService);
+
+  ngOnInit(): void {
+  }
 }

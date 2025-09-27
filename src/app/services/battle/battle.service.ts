@@ -20,21 +20,6 @@ export class BattleService {
     return this.http.get(`${this.urlBattle}/summary`);
   }
 
-  postCreate(playerName: string, creature: string): Observable<any> {
-    const body = {
-      name: playerName,
-      creature: creature,
-    }
-    return this.http.post(`${this.urlPlayer}/create`, body);
-  }
-
-  postLogin(playerName: string): Observable<any> {
-    const body = {
-      name: playerName,
-    }
-    return this.http.post(`${this.urlPlayer}/login`, body);
-  }
-
   postNNGraph(playerData: TrainModel, enemyData: TrainModel): Observable<any> {
     const body = {
       player_name_A: playerData.playerName,

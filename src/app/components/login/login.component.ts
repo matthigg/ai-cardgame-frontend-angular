@@ -12,6 +12,7 @@ import { BattleService } from '../../services/battle/battle.service';
 import { ColorThemeService } from '../../services/color-theme/color-theme.service';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { LoginService } from '../../services/login/login.service';
 
 @Component({
   selector: 'app-login',
@@ -32,6 +33,7 @@ import { CommonModule } from '@angular/common';
 })
 export class LoginComponent implements OnInit {
   public battleService = inject(BattleService);
+  public loginService = inject(LoginService);
   public colorThemeService: ColorThemeService = inject(ColorThemeService);
   private fb = inject(FormBuilder);
   private router = inject(Router);
@@ -68,7 +70,7 @@ export class LoginComponent implements OnInit {
 
   create(playerName: string | undefined | null, creature: string | undefined | null): any {
     if (playerName && creature) {
-      this.battleService.postCreate(playerName, creature)
+      this.loginService.postCreate(playerName, creature)
         .pipe(take(1))
         .subscribe(
           response => {
@@ -86,7 +88,7 @@ export class LoginComponent implements OnInit {
 
   login(playerName: string | undefined | null): any {
     if (playerName) {
-      this.battleService.postLogin(playerName)
+      this.loginService.postLogin(playerName)
         .pipe(take(1))
         .subscribe(
           response => {
