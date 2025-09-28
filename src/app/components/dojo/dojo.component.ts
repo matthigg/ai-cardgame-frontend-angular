@@ -6,6 +6,9 @@ import { NnGraph19Component } from '../../components/nn-graphs/nn-graph-19/nn-gr
 import { DojoService } from '../../services/dojo/dojo.service';
 import { LoginService } from '../../services/login/login.service';
 import { TrainModel } from '../../shared/models/train.model';
+import { BattleService } from '../../services/battle/battle.service';
+import { take } from 'rxjs';
+import { PlayerModel } from '../../shared/models/players.model';
 
 @Component({
   selector: 'app-dojo',
@@ -19,11 +22,12 @@ import { TrainModel } from '../../shared/models/train.model';
   styleUrl: './dojo.component.scss'
 })
 export class DojoComponent implements AfterViewInit {
+  private battleService: BattleService = inject(BattleService);
   public dojoService: DojoService = inject(DojoService);
   private loginService: LoginService = inject(LoginService);
 
   ngAfterViewInit(): void {
-    const playerCreaturesList: TrainModel[] = []
+    const playerCreaturesList: TrainModel[] = [];
     const userInfo = this.loginService.userInfo
     userInfo?.creatures?.forEach(creature => {
       playerCreaturesList.push({
@@ -34,8 +38,27 @@ export class DojoComponent implements AfterViewInit {
       });
     });
 
+    const npcsList: TrainModel[] = [];
+    this.battleService.getNPCs()
+      .pipe(take(1))
+      .subscribe(response => {
+        response.forEach((npc: PlayerModel) => {
+          npc.creatures.forEach(creature => {
+            npcsList.push({
+              playerName: npc.name,
+              playerID: npc.id,
+              creatureName: creature.name,
+              creatureID: creature.id,
+            });
+          });
+        });
+      });
+
     setTimeout(() => {
       this.dojoService.playerCreatures = playerCreaturesList;
+      this.dojoService.enemyCreatures = npcsList;
+
+      console.log('--- npcsList: ', npcsList);
     });
   }
 }

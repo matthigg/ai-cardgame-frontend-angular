@@ -9,11 +9,16 @@ import { TrainModel } from '../../shared/models/train.model';
 export class BattleService {
   private urlBattle = 'http://127.0.0.1:8000/battle';
   private urlPlayer = 'http://127.0.0.1:8000/player';
+  private urlNPCs = 'http://127.0.0.1:8000/npc'
 
   constructor(private http: HttpClient) {}
 
   getCreatures(): Observable<any> {
     return this.http.get(`${this.urlPlayer}/creature-templates`);
+  }
+
+  getNPCs(): Observable<any> {
+    return this.http.get(`${this.urlNPCs}/npcs`);
   }
 
   getSummary(): Observable<any> {

@@ -48,7 +48,6 @@ export class LoginComponent implements OnInit {
   errorMessageCreate: WritableSignal<{ error: { detail: string } } | null> = signal(null);
   errorMessageGetCreatures: WritableSignal<{ error: { detail: string } } | null> = signal(null);
   errorMessageLogin: WritableSignal<{ error: { detail: string } } | null> = signal(null);
-  loggedInUser = {};
   Object = Object;
 
   ngOnInit(): void {
@@ -75,7 +74,6 @@ export class LoginComponent implements OnInit {
         .subscribe(
           response => {
             console.log('--- create response: ', response);
-            this.loggedInUser = response;
             this.router.navigate(['/dojo']);
           },
           error => {

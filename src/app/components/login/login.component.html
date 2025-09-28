@@ -7,7 +7,11 @@
       <mat-card-content>
         <mat-form-field [formGroup]="loginFG">
           <mat-label>Login Name</mat-label>
-          <input formControlName="loginName" matInput value="">
+          <input 
+            formControlName="loginName" 
+            matInput 
+            (keyup.enter)="login(loginFG.get('loginName')?.value)"
+          >
         </mat-form-field>
         
         <div class="error-message" *ngIf="errorMessageLogin()">
