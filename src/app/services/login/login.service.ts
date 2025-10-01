@@ -40,4 +40,18 @@ export class LoginService {
         }),
       );
   }
+
+  postLogout(playerName: string): Observable<{ status: string, message: string, deleted_checkpoints: string }> {
+    const body = {
+      name: playerName,
+    }
+    return this.http.post<any>(`${this.urlPlayer}/logout`, body)
+      .pipe(
+        take(1),
+        tap(response => {
+          // this.userInfo = response;
+          console.log('--- response: ', response);
+        }),
+      );
+  }
 }

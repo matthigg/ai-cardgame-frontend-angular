@@ -3,6 +3,10 @@
     Login
   </button>
 
+  <button mat-button (click)="logout(loginService.userInfo?.name)">
+    Logout
+  </button>
+
   <button mat-button (click)="navigateToDojo()">
     Dojo
   </button>

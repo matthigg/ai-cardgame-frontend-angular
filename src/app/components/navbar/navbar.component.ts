@@ -3,6 +3,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { Router } from '@angular/router';
+import { LoginService } from '../../services/login/login.service';
+import { take } from 'rxjs';
 
 @Component({
   selector: 'app-navbar',
@@ -11,6 +13,7 @@ import { Router } from '@angular/router';
   styleUrl: './navbar.component.scss'
 })
 export class NavbarComponent {
+  public loginService = inject(LoginService);
   private router = inject(Router);
 
   navigateToDojo(): void {
@@ -20,4 +23,20 @@ export class NavbarComponent {
   navigateToLogin(): void {
     this.router.navigate(['/login']);
   };
+
+  logout(playerName: string | undefined | null): any {
+    if (playerName) {
+      this.loginService.postLogout(playerName)
+        .pipe(take(1))
+        .subscribe(
+          response => {
+            console.log('--- logout response: ', response);
+            this.router.navigate(['/login']);
+          },
+          error => {
+            console.log('--- logout error: ', error);
+          }
+        );
+    }
+  }
 }
