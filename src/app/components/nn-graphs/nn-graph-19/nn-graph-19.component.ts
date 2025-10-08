@@ -70,16 +70,17 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
   @ViewChild('svgRef', { static: true }) svgRef!: ElementRef<SVGSVGElement>;
   @ViewChild('tooltip', { static: true }) tooltipRef!: ElementRef<HTMLDivElement>;
   @Input({ required: true }) activations!: WritableSignal<Activations | null>;
-  @Input() haloRadius = 6;
   @Input() passDirection: 'forward' | 'backward' | 'none' = 'forward';
   @Input() showActivation = false;
   @Input() weightFontColor = 'white';
   @Input() showPulses = false;
   @Input() easeType: (t: number) => number = d3.easeLinear;
-  @Input() linkPulseScale = 4;
-  @Input() linkPulseOpacity = 0.7;
   @Input({ required: true }) isPlaying!: WritableSignal<boolean>;
   @Input() uncenteredNeuronPadding: number = 30;
+
+  /** Single intensity control variable for neuron halos, node size, and link pulse */
+  @Input() intensity: number = 1;
+
   @Output() layoutToggled = new EventEmitter<'vertical' | 'horizontal' | 'center'>();
 
   layoutVertical = false;
@@ -106,18 +107,14 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
     if (this.selectedValue) {
       this.colorScale.set(colorPalettes(this.selectedValue));
     }
-
-    // Recreate scales using new palette
     this.weightColorScale = d3.scaleLinear<string>()
       .domain([-1, 0, 1])
       .range(this.colorScale());
-
     this.activationColorScale = d3.scaleLinear<string>()
       .domain([0, 0.5, 1])
       .range(this.colorScale());
   }
 
-  // Color scales (initialized with default palette)
   private weightColorScale = d3.scaleLinear<string>()
     .domain([-1, 0, 1])
     .range(this.colorScale());
@@ -127,7 +124,6 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
     .range(this.colorScale());
 
   constructor() {
-    // Watch the activations signal and update graph
     effect(() => {
       const data = this.activations();
 
@@ -137,7 +133,6 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
       }
 
       if (this.currentCreature !== data.creature) {
-        // Creature switched: full rebuild
         this.currentCreature = data.creature;
         this.sessionId++;
         this.hardResetSvg();
@@ -145,7 +140,6 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
         this.renderLayout(layout);
         this.updateGraph(data.activations, data.epoch, layout, this.sessionId);
       } else {
-        // Same creature: update activations/pulses
         const layout = this.ensureLayoutForCurrent(data.activations);
         this.updateGraph(data.activations, data.epoch, layout, this.sessionId);
       }
@@ -183,15 +177,10 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
     this.passDirection = this.passDirection === 'forward' ? 'backward' : 'forward';
   }
 
-  /**
-   * Toggle layout orientation. Instead of fully re-rendering, compute the
-   * new coordinates for nodes and animate nodes + links to the new positions.
-   */
   toggleLayout(): void {
     this.layoutVertical = !this.layoutVertical;
     this.layoutToggled.emit(this.layoutVertical ? 'vertical' : 'horizontal');
 
-    // If no layout yet, nothing to animate; ensure layout/render
     if (!this._currentNodes.length) {
       const data = this.activations();
       if (!data?.activations?.length) return;
@@ -201,47 +190,38 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
       return;
     }
 
-    // Build a new layout purely to get target coordinates (but don't re-bind DOM)
     const data = this.activations();
     const newLayout = this.buildDynamicLayoutFromActivations(data?.activations || []);
 
-    // Build a quick lookup map keyed by layer-index
     const posMap: Record<string, { x: number, y: number }> = {};
     newLayout.nodes.forEach(n => {
       posMap[`${n.layer}-${n.index}`] = { x: n.x, y: n.y };
     });
 
-    // Apply target positions to existing node objects (so Link.source/target still refer to same Node objects)
     this._currentNodes.forEach(n => {
       const key = `${n.layer}-${n.index}`;
       const p = posMap[key];
-      if (p) {
-        n.x = p.x;
-        n.y = p.y;
-      }
+      if (p) { n.x = p.x; n.y = p.y; }
     });
 
-    // Update the stored layerMapping to the new one (structure should be same counts)
     this._currentLayerMapping = newLayout.layerMapping;
 
-    // Animate node halos and nodes positions
     const nodeGroup = this.svg.selectAll<SVGGElement, Node>('.node-group');
 
     nodeGroup.select<SVGCircleElement>('.halo')
       .transition()
       .duration(this.easeDuration)
       .ease(this.easeType)
-      .attr('cx', (d: any) => d.x)
-      .attr('cy', (d: any) => d.y);
+      .attr('cx', d => d.x)
+      .attr('cy', d => d.y);
 
     nodeGroup.select<SVGCircleElement>('.node')
       .transition()
       .duration(this.easeDuration)
       .ease(this.easeType)
-      .attr('cx', (d: any) => d.x)
-      .attr('cy', (d: any) => d.y);
+      .attr('cx', d => d.x)
+      .attr('cy', d => d.y);
 
-    // Animate links positions
     this.svg.selectAll<SVGLineElement, Link>('.link')
       .transition()
       .duration(this.easeDuration)
@@ -273,9 +253,6 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
     return layout;
   }
 
-
-
-
   private buildDynamicLayoutFromActivations(activations: number[][]) {
     const width = this.svgRef.nativeElement.clientWidth || 800;
     const height = this.svgRef.nativeElement.clientHeight || 600;
@@ -284,14 +261,11 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
     const links: Link[] = [];
     const layerMapping: number[][][] = [];
 
-    if (!activations || !activations.length) {
-      return { nodes, links, layerMapping };
-    }
+    if (!activations || !activations.length) return { nodes, links, layerMapping };
 
     const layerCount = activations.length;
     const maxNeurons = Math.max(...activations.map(l => (Array.isArray(l) ? l.length : 1)));
 
-    // Base gaps
     const layerXGap = width / (layerCount + 1);
     const layerYGap = height / (layerCount + 1);
     const neuronXGap = width / (maxNeurons + 1);
@@ -300,26 +274,16 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
     activations.forEach((layer, layerIndex) => {
       const displayUnits = Array.isArray(layer[0]) ? layer : layer.map(v => [v]);
       const mapping: number[][] = [];
-
-      // Compute per-layer offset for center alignment
       const neuronCount = displayUnits.length;
-      const offsetX = this.centerNeurons
-        ? (width - neuronXGap * (neuronCount - 1)) / 2
-        : this.uncenteredNeuronPadding;
-      const offsetY = this.centerNeurons
-        ? (height - neuronYGap * (neuronCount - 1)) / 2
-        : this.uncenteredNeuronPadding;
+      const offsetX = this.centerNeurons ? (width - neuronXGap * (neuronCount - 1)) / 2 : this.uncenteredNeuronPadding;
+      const offsetY = this.centerNeurons ? (height - neuronYGap * (neuronCount - 1)) / 2 : this.uncenteredNeuronPadding;
 
       displayUnits.forEach((_, i) => {
         nodes.push({
           layer: layerIndex,
           index: i,
-          x: this.layoutVertical
-            ? i * neuronXGap + offsetX
-            : (layerIndex + 1) * layerXGap,
-          y: this.layoutVertical
-            ? (layerIndex + 1) * layerYGap
-            : i * neuronYGap + offsetY,
+          x: this.layoutVertical ? i * neuronXGap + offsetX : (layerIndex + 1) * layerXGap,
+          y: this.layoutVertical ? (layerIndex + 1) * layerYGap : i * neuronYGap + offsetY,
           activation: 0
         });
         mapping.push([i]);
@@ -328,17 +292,12 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
       layerMapping.push(mapping);
     });
 
-    // Connect adjacent layers
     for (let l = 0; l < layerMapping.length - 1; l++) {
       const fromLayer = nodes.filter(n => n.layer === l);
       const toLayer = nodes.filter(n => n.layer === l + 1);
       fromLayer.forEach(src =>
         toLayer.forEach(tgt =>
-          links.push({
-            source: src,
-            target: tgt,
-            weight: Math.random() * 2 - 1
-          })
+          links.push({ source: src, target: tgt, weight: Math.random() * 2 - 1 })
         )
       );
     }
@@ -346,13 +305,9 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
     return { nodes, links, layerMapping };
   }
 
-
-
-
   private renderLayout(layout: { nodes: Node[], links: Link[], layerMapping: number[][][] }) {
     const { nodes, links } = layout;
 
-    // ---- Links with tooltip ----
     this.svg.selectAll<SVGLineElement, Link>('.link')
       .data(links, d => `${d.source.layer}-${d.source.index}-${d.target.layer}-${d.target.index}`)
       .enter()
@@ -363,8 +318,8 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
       .attr('x2', d => d.target.x)
       .attr('y2', d => d.target.y)
       .attr('stroke', d => this.weightColorScale(d.weight))
-      .attr('stroke-width', 1)
-      .attr('opacity', 1)
+      .attr('stroke-width', 1 * this.intensity)
+      .attr('opacity', 1 * this.intensity)
       .on('mouseover', (event, d) => {
         this.tooltip
           .style('opacity', 1)
@@ -377,11 +332,8 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
           .style('left', `${event.pageX + 10}px`)
           .style('top', `${event.pageY - 20}px`);
       })
-      .on('mouseout', () => {
-        this.tooltip.style('opacity', 0);
-      });
+      .on('mouseout', () => { this.tooltip.style('opacity', 0); });
 
-    // ---- Nodes with tooltip ----
     const nodeGroup = this.svg.selectAll<SVGGElement, Node>('.node-group')
       .data(nodes, d => `${d.layer}-${d.index}`)
       .enter()
@@ -399,7 +351,7 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
       .attr('class', 'node')
       .attr('cx', d => d.x)
       .attr('cy', d => d.y)
-      .attr('r', 5)
+      .attr('r', 5 * this.intensity)
       .attr('opacity', 1)
       .attr('fill', d => this.activationColorScale(d.activation))
       .on('mouseover', (event, d) => {
@@ -415,11 +367,8 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
           .style('left', `${event.pageX + 10}px`)
           .style('top', `${event.pageY - 20}px`);
       })
-      .on('mouseout', () => {
-        this.tooltip.style('opacity', 0);
-      });
+      .on('mouseout', () => { this.tooltip.style('opacity', 0); });
 
-    // Save current layout
     this._currentNodes = nodes;
     this._currentLinks = links;
     this._currentLayerMapping = layout.layerMapping;
@@ -433,7 +382,6 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
   ) {
     const { nodes, links, layerMapping } = layout;
 
-    // Update activations mapping
     if (activations && activations.length > 0) {
       activations.forEach((layer: number[], l: number) => {
         const mapping = layerMapping[l];
@@ -444,24 +392,19 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
       });
     }
 
-    // Update links
     this.svg.selectAll<SVGLineElement, Link>('.link')
       .data(links, d => `${d.source.layer}-${d.source.index}-${d.target.layer}-${d.target.index}`)
-      .attr('x1', d => d.source.x)   // geometry updates immediately
+      .attr('x1', d => d.source.x)
       .attr('y1', d => d.source.y)
       .attr('x2', d => d.target.x)
       .attr('y2', d => d.target.y)
       .transition()
       .duration(this.easeDuration)
       .ease(this.easeType)
-      .attr('stroke-width', d => 1 + Math.abs(d.source.activation - d.target.activation) * this.linkPulseScale)
-      // .attr('opacity', d => Math.abs(d.source.activation + d.target.activation) * this.linkPulseOpacity)
-      // .attr('opacity', d => Math.abs(d.source.activation * d.target.activation) * this.linkPulseOpacity)
-      .attr('opacity', d => Math.min(1, (d.source.activation + d.target.activation)) * this.linkPulseOpacity)
-      // .attr('opacity', d => Math.min(1, (d.source.activation * d.target.activation)) * this.linkPulseOpacity)
+      .attr('stroke-width', d => 1 + Math.abs(d.source.activation - d.target.activation) * this.intensity)
+      .attr('opacity', d => Math.min(1, (d.source.activation + d.target.activation)) * this.intensity)
       .attr('stroke', d => this.weightColorScale(d.weight));
 
-    // Pulses (per epoch)
     if (this.showPulses && this.passDirection !== 'none' && epoch !== undefined) {
       const localSession = sessionAtSchedule;
       links.forEach(d => {
@@ -477,13 +420,12 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
           .attr('class', 'pulse')
           .attr('cx', xStart)
           .attr('cy', yStart)
-          .attr('r', 3 + 4 * act)
+          .attr('r', 3 * this.intensity + 4 * act * this.intensity)
           .attr('fill', pulseColor)
-          .attr('opacity', 0.9);
+          .attr('opacity', 0.9 * this.intensity);
 
         pulse.transition()
           .duration(this.pulseDuration)
-          // .duration(this.easeDuration)
           .ease(this.easeType)
           .attr('cx', xEnd)
           .attr('cy', yEnd)
@@ -498,7 +440,6 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
       });
     }
 
-    // Node transitions: halos and nodes update size/color & position
     const nodeGroup = this.svg.selectAll<SVGGElement, Node>('.node-group')
       .data(nodes, d => `${d.layer}-${d.index}`);
 
@@ -506,8 +447,8 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
       .transition()
       .duration(this.easeDuration)
       .ease(this.easeType)
-      .attr('r', d => d.activation > 0 ? this.haloRadius * d.activation : 0)
-      .attr('opacity', d => d.activation > 0.1 ? 1 : 0)
+      .attr('r', d => d.activation > 0 ? this.intensity * d.activation * 6 : 0)
+      .attr('opacity', d => d.activation > 0.1 ? 1 * this.intensity : 0)
       .attr('fill', d => this.activationColorScale(d.activation))
       .attr('cx', d => d.x)
       .attr('cy', d => d.y);
@@ -516,7 +457,7 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
       .transition()
       .duration(this.easeDuration)
       .ease(this.easeType)
-      .attr('r', d => 5 + d.activation * 5)
+      .attr('r', d => 5 * this.intensity + d.activation * 5 * this.intensity)
       .attr('fill', d => this.activationColorScale(d.activation))
       .attr('cx', d => d.x)
       .attr('cy', d => d.y);
@@ -524,13 +465,10 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
 
   toggleCenterNeurons(): void {
     this.centerNeurons = !this.centerNeurons;
-    
-    // Emit an event so parent can cancel playback
     this.layoutToggled.emit('center'); 
 
     if (!this._currentNodes.length) return;
 
-    // Recompute positions without rebinding DOM
     const data = this.activations();
     const newLayout = this.buildDynamicLayoutFromActivations(data?.activations || []);
 
@@ -542,15 +480,11 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
     this._currentNodes.forEach(n => {
       const key = `${n.layer}-${n.index}`;
       const p = posMap[key];
-      if (p) {
-        n.x = p.x;
-        n.y = p.y;
-      }
+      if (p) { n.x = p.x; n.y = p.y; }
     });
 
     this._currentLayerMapping = newLayout.layerMapping;
 
-    // Animate nodes
     const nodeGroup = this.svg.selectAll<SVGGElement, Node>('.node-group');
     nodeGroup.select<SVGCircleElement>('.halo')
       .transition()
@@ -566,7 +500,6 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
       .attr('cx', d => d.x)
       .attr('cy', d => d.y);
 
-    // Animate links
     this.svg.selectAll<SVGLineElement, Link>('.link')
       .transition()
       .duration(this.easeDuration)
