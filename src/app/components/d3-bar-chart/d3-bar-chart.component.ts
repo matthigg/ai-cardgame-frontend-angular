@@ -1,7 +1,5 @@
-import { Component, Input, OnInit, OnChanges, SimpleChanges, ElementRef, ViewChild, signal, WritableSignal, inject, effect } from '@angular/core';
+import { Component, Input, OnInit, ElementRef, ViewChild, WritableSignal, effect } from '@angular/core';
 import * as d3 from 'd3';
-import { BattleService } from '../../services/battle/battle.service';
-import { take } from 'rxjs';
 import { CreatureStats } from '../../shared/models/creature.model';
 
 @Component({
@@ -18,64 +16,49 @@ export class D3BarChartComponent implements OnInit {
   private width = 800 - this.margin.left - this.margin.right;
   private height = 400 - this.margin.top - this.margin.bottom;
 
-  // private color = d3.scaleOrdinal<string>().range(['steelblue', 'tomato']);
-  
-  private color = d3.scaleOrdinal<string, string>()
-    .domain(['player', 'enemy'])
-    .range(['steelblue', 'tomato']);
-
-
   constructor() {
     effect(() => {
-      console.log('--- this.summaryData(): ', this.summaryData());
       const data = this.summaryData();
       this.updateChart(data);
-    })
+    });
   }
 
   ngOnInit(): void {
     this.createChart();
   }
 
-private createChart(): void {
-  this.svg = d3.select(this.chartContainer.nativeElement)
-    .append('svg')
-    .attr('width', this.width + this.margin.left + this.margin.right)
-    .attr('height', this.height + this.margin.top + this.margin.bottom)
-    .style('background-color', '#111') // black background
-    .append('g')
-    .attr('transform', `translate(${this.margin.left},${this.margin.top})`);
-}
+  private createChart(): void {
+    this.svg = d3.select(this.chartContainer.nativeElement)
+      .append('svg')
+      .attr('width', this.width + this.margin.left + this.margin.right)
+      .attr('height', this.height + this.margin.top + this.margin.bottom)
+      .style('background-color', '#111')
+      .append('g')
+      .attr('transform', `translate(${this.margin.left},${this.margin.top})`);
+  }
 
-  private updateChart(summaryData: any): void {
+  private updateChart(summaryData: Record<string, CreatureStats> | null): void {
     if (!summaryData) return;
 
-    // Custom x-axis order including a divider
+    const creatures = Object.keys(summaryData);
+
+    // Extract unique owners from keys
+    const owners = Array.from(new Set(creatures.map(key => key.split(':')[0])));
+    const color = d3.scaleOrdinal<string, string>()
+      .domain(owners)
+      .range(d3.schemeCategory10);
+
     const xOrder = [
       'attack', 'defend', 'recover', 'poison', 'stun',
       'divider',
       'knockout', 'stunned', 'poisoned', 'stalemates'
     ];
 
-    // const creatures = Object.keys(summaryData);
-
-    const creatures = Object.keys(summaryData).map(c => {
-      const owner = summaryData[c].owner || (summaryData[c].isPlayer ? 'player' : 'enemy');
-      return `${owner}:${c}`;
-    });
-
-    // Prepare data for bars, skip 'divider'
     const data = xOrder
       .filter(cat => cat !== 'divider')
       .map(cat => {
         const obj: any = { category: cat };
-        // creatures.forEach(c => obj[c] = summaryData[c].stats[cat]);
-
-        creatures.forEach(cKey => {
-          const [, name] = cKey.split(':');
-          obj[cKey] = summaryData[name].stats[cat];
-        });
-        
+        creatures.forEach(cKey => obj[cKey] = summaryData[cKey].stats[cat]);
         return obj;
       });
 
@@ -94,20 +77,28 @@ private createChart(): void {
       .nice()
       .range([this.height, 0]);
 
-    // Clear previous content
     this.svg.selectAll('*').remove();
+
+    // Tooltip
+    const tooltip = d3.select(this.chartContainer.nativeElement)
+      .append('div')
+      .style('position', 'absolute')
+      .style('background', '#222')
+      .style('color', '#fff')
+      .style('padding', '4px 8px')
+      .style('border-radius', '4px')
+      .style('pointer-events', 'none')
+      .style('display', 'none');
 
     // Axes
     this.svg.append('g')
       .attr('transform', `translate(0,${this.height})`)
       .call(d3.axisBottom(x0).tickFormat(d => d === 'divider' ? '' : d))
-      .selectAll('text')
-      .style('fill', '#bbb');
+      .selectAll('text').style('fill', '#bbb');
 
     this.svg.append('g')
       .call(d3.axisLeft(y))
-      .selectAll('text')
-      .style('fill', '#bbb');
+      .selectAll('text').style('fill', '#bbb');
 
     // Divider lines
     this.svg.selectAll('line.divider')
@@ -123,7 +114,7 @@ private createChart(): void {
       .attr('stroke-width', 1)
       .attr('stroke-dasharray', '4,2');
 
-    // Bars with animation and stagger
+    // Bars
     const bars = this.svg.selectAll('g.category')
       .data(data)
       .enter()
@@ -139,17 +130,18 @@ private createChart(): void {
       .attr('y', this.height)
       .attr('width', x1.bandwidth())
       .attr('height', 0)
-      .attr('fill', d => this.color(d.key)!)
+      .attr('fill', d => {
+        const [owner] = d.key.split(':');
+        return color(owner);
+      })
       .on('mouseover', function(event, d) {
         d3.select(this).attr('opacity', 0.7);
-        // tooltip.style('display', 'block').text(`${d.key}: ${d.value}`);
-
-        tooltip.style('display', 'block').text(`${d.key.split(':')[1]}: ${d.value}`);
+        const [, name] = d.key.split(':');
+        tooltip.style('display', 'block').text(`${name}: ${d.value}`);
       })
       .on('mousemove', function(event) {
-        tooltip
-          .style('left', event.offsetX + 10 + 'px')
-          .style('top', event.offsetY - 10 + 'px');
+        tooltip.style('left', event.offsetX + 10 + 'px')
+               .style('top', event.offsetY - 10 + 'px');
       })
       .on('mouseout', function() {
         d3.select(this).attr('opacity', 1);
@@ -157,20 +149,9 @@ private createChart(): void {
       })
       .transition()
       .duration(300)
-      .delay((d, i) => i * 100)
+      .delay((_, i) => i * 100)
       .attr('y', d => y(d.value))
       .attr('height', d => this.height - y(d.value));
-
-    // Tooltip
-    const tooltip = d3.select(this.chartContainer.nativeElement)
-      .append('div')
-      .style('position', 'absolute')
-      .style('background', '#222')
-      .style('color', '#fff')
-      .style('padding', '4px 8px')
-      .style('border-radius', '4px')
-      .style('pointer-events', 'none')
-      .style('display', 'none');
 
     // Legend
     const legend = this.svg.selectAll('.legend')
@@ -182,14 +163,15 @@ private createChart(): void {
     legend.append('rect')
       .attr('width', 15)
       .attr('height', 15)
-      .attr('fill', d => this.color(d)!);
+      .attr('fill', d => {
+        const [owner] = d.split(':');
+        return color(owner);
+      });
 
     legend.append('text')
       .attr('x', 20)
       .attr('y', 12)
       .style('fill', '#bbb')
-      // .text(d => d);
-
-      .text(d => d.split(':')[1]);
+      .text(d => d.split(':')[1]); // name only
   }
 }
