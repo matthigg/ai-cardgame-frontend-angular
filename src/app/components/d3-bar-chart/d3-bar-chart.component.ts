@@ -17,10 +17,17 @@ export class D3BarChartComponent implements OnInit {
   private margin = { top: 30, right: 30, bottom: 50, left: 60 };
   private width = 800 - this.margin.left - this.margin.right;
   private height = 400 - this.margin.top - this.margin.bottom;
-  private color = d3.scaleOrdinal<string>().range(['steelblue', 'tomato']);
+
+  // private color = d3.scaleOrdinal<string>().range(['steelblue', 'tomato']);
+  
+  private color = d3.scaleOrdinal<string, string>()
+    .domain(['player', 'enemy'])
+    .range(['steelblue', 'tomato']);
+
 
   constructor() {
     effect(() => {
+      console.log('--- this.summaryData(): ', this.summaryData());
       const data = this.summaryData();
       this.updateChart(data);
     })
@@ -50,14 +57,25 @@ private createChart(): void {
       'knockout', 'stunned', 'poisoned', 'stalemates'
     ];
 
-    const creatures = Object.keys(summaryData);
+    // const creatures = Object.keys(summaryData);
+
+    const creatures = Object.keys(summaryData).map(c => {
+      const owner = summaryData[c].owner || (summaryData[c].isPlayer ? 'player' : 'enemy');
+      return `${owner}:${c}`;
+    });
 
     // Prepare data for bars, skip 'divider'
     const data = xOrder
       .filter(cat => cat !== 'divider')
       .map(cat => {
         const obj: any = { category: cat };
-        creatures.forEach(c => obj[c] = summaryData[c].stats[cat]);
+        // creatures.forEach(c => obj[c] = summaryData[c].stats[cat]);
+
+        creatures.forEach(cKey => {
+          const [, name] = cKey.split(':');
+          obj[cKey] = summaryData[name].stats[cat];
+        });
+        
         return obj;
       });
 
@@ -124,7 +142,9 @@ private createChart(): void {
       .attr('fill', d => this.color(d.key)!)
       .on('mouseover', function(event, d) {
         d3.select(this).attr('opacity', 0.7);
-        tooltip.style('display', 'block').text(`${d.key}: ${d.value}`);
+        // tooltip.style('display', 'block').text(`${d.key}: ${d.value}`);
+
+        tooltip.style('display', 'block').text(`${d.key.split(':')[1]}: ${d.value}`);
       })
       .on('mousemove', function(event) {
         tooltip
@@ -168,6 +188,8 @@ private createChart(): void {
       .attr('x', 20)
       .attr('y', 12)
       .style('fill', '#bbb')
-      .text(d => d);
+      // .text(d => d);
+
+      .text(d => d.split(':')[1]);
   }
 }

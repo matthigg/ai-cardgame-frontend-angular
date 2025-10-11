@@ -57,8 +57,6 @@ export class DojoComponent implements AfterViewInit {
     setTimeout(() => {
       this.dojoService.playerCreatures = playerCreaturesList;
       this.dojoService.enemyCreatures = npcsList;
-
-      console.log('--- npcsList: ', npcsList);
     });
   }
 }

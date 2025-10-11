@@ -56,6 +56,8 @@ export class DojoService {
       const enemyData = this.dojoFormGroup.get('enemyFC')?.value;
       const result = await this.battleService.postTrain(playerData, enemyData).pipe(take(1)).toPromise();
 
+      console.log('--- result: ', result);
+
       this.summaryData.set(result.summary);
       this.addStatusMessage('Training completed! Fetching activations...');
 

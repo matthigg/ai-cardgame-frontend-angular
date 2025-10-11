@@ -57,11 +57,9 @@ export class LoginComponent implements OnInit {
       .pipe(take(1))
       .subscribe(
         response => {
-          console.log('--- creature tempalte response: ', response);
           this.creatureTemplate = response;
         },
         error => {
-          console.log('--- get creatures error: ', error);
           this.errorMessageGetCreatures.set(error);
         }
       );
@@ -73,11 +71,9 @@ export class LoginComponent implements OnInit {
         .pipe(take(1))
         .subscribe(
           response => {
-            console.log('--- create response: ', response);
             this.router.navigate(['/dojo']);
           },
           error => {
-            console.log('--- create error: ', error);
             this.errorMessageCreate.set(error);
           }
         ); 
@@ -90,11 +86,9 @@ export class LoginComponent implements OnInit {
         .pipe(take(1))
         .subscribe(
           response => {
-            console.log('--- login response: ', response);
             this.router.navigate(['/dojo']);
           },
           error => {
-            console.log('--- login error: ', error);
             this.errorMessageLogin.set(error)
           }
         );
