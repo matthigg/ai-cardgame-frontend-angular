@@ -4,12 +4,8 @@
 <mat-sidenav-container>
   <mat-sidenav #sidenav mode="side" opened>
     <div>
-      <button mat-button (click)="dojoService.onTrain(playerCreatureName)">
-        Run Training Loop ({{ playerCreatureName }})
-      </button>
-
       <mat-form-field [formGroup]="dojoService.dojoFormGroup">
-        <mat-label>Player</mat-label>
+        <mat-label>Your creature</mat-label>
         <mat-select formControlName="playerFC">
           @for (pc of dojoService.playerCreatures; track pc) {
             <mat-option [value]="pc"> {{ pc.playerName }} - {{ pc.creatureName }} </mat-option>
@@ -18,13 +14,18 @@
       </mat-form-field>
 
       <mat-form-field [formGroup]="dojoService.dojoFormGroup">
-        <mat-label>Enemy</mat-label>
+        <mat-label>Enemy creature</mat-label>
         <mat-select formControlName="enemyFC">
           @for (ec of dojoService.enemyCreatures; track ec) {
             <mat-option [value]="ec"> {{ ec.playerName }} - {{ ec.creatureName }} </mat-option>
           }
         </mat-select>
       </mat-form-field>
+
+      <button mat-button (click)="dojoService.onTrain(playerCreatureName)">
+        Run Training Loop
+      </button>
+
     </div>
   </mat-sidenav>
 

@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, signal, WritableSignal } from '@angular/core';
 import { Observable, take, tap } from 'rxjs';
 import { PlayerModel } from '../../shared/models/players.model';
 
@@ -10,7 +10,7 @@ export class LoginService {
   private urlBattle = 'http://127.0.0.1:8000/battle';
   private urlPlayer = 'http://127.0.0.1:8000/player';
 
-  userInfo?: PlayerModel;
+  userInfoSignal: WritableSignal<PlayerModel | null> = signal(null);
 
   constructor(private http: HttpClient) { }
 
@@ -22,8 +22,8 @@ export class LoginService {
     return this.http.post<PlayerModel>(`${this.urlPlayer}/create`, body)
       .pipe(
         take(1),
-        tap(response => {
-          this.userInfo = response;
+        tap((response: PlayerModel) => {
+          this.userInfoSignal.set(response);
         }),
       );
   }
@@ -35,13 +35,17 @@ export class LoginService {
     return this.http.post<PlayerModel>(`${this.urlPlayer}/login`, body)
       .pipe(
         take(1),
-        tap(response => {
-          this.userInfo = response;
+        tap((response: PlayerModel) => {
+          this.userInfoSignal.set(response);
         }),
       );
   }
 
-  postLogout(playerName: string): Observable<{ status: string, message: string, deleted_checkpoints: string }> {
+  postLogout(playerName: string): Observable<{ 
+    status: string, 
+    message: string,
+    deleted_checkpoints: string 
+  }> {
     const body = {
       name: playerName,
     }
@@ -50,7 +54,8 @@ export class LoginService {
         take(1),
         tap(response => {
           // this.userInfo = response;
-          console.log('--- response: ', response);
+          // console.log('--- response: ', response);
+          this.userInfoSignal.set(null);
         }),
       );
   }

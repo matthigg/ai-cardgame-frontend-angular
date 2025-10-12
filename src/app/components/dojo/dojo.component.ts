@@ -28,7 +28,7 @@ export class DojoComponent implements AfterViewInit {
 
   ngAfterViewInit(): void {
     const playerCreaturesList: TrainModel[] = [];
-    const userInfo = this.loginService.userInfo
+    const userInfo = this.loginService.userInfoSignal()
     userInfo?.creatures?.forEach(creature => {
       playerCreaturesList.push({
         playerName: userInfo.name,

@@ -3,7 +3,7 @@
     Login
   </button>
 
-  <button mat-button (click)="logout(loginService.userInfo?.name)">
+  <button mat-button (click)="logout(loginService.userInfoSignal()?.name)">
     Logout
   </button>
 
@@ -11,7 +11,7 @@
     Dojo
   </button>
 
-  <button matButton="elevated" (click)="openDialog()">
+  <button mat-button (click)="openDialog()">
     Settings
   </button>
 </mat-toolbar>
