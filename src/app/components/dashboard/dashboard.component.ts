@@ -1,10 +1,7 @@
 import {
   Component,
   inject,
-  NgZone,
   OnInit,
-  signal,
-  WritableSignal
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -48,9 +45,7 @@ export class DashboardComponent implements OnInit {
   public dojoService = inject(DojoService);
   public colorThemeService = inject(ColorThemeService);
   private router = inject(Router);
-  private zone = inject(NgZone);
 
-  // ✅ Convert the router's url$ observable into a signal
   activeRoute$ = this.router.events.pipe(
     filter((e): e is NavigationEnd => e instanceof NavigationEnd),
     map(e => e.urlAfterRedirects),

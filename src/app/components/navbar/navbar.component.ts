@@ -7,10 +7,13 @@ import { LoginService } from '../../services/login/login.service';
 import { take } from 'rxjs';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { SettingsDialogComponent } from '../settings-dialog/settings-dialog.component';
+import { PlayerModel } from '../../shared/models/players.model';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-navbar',
   imports: [ 
+    CommonModule,
     MatButtonModule, 
     MatCardModule, 
     MatDialogModule, 
@@ -23,11 +26,11 @@ export class NavbarComponent {
   public loginService = inject(LoginService);
   private router = inject(Router);
   readonly dialog = inject(MatDialog);
+  userInfo: PlayerModel | null = null;
 
   constructor() {
     effect(() => {
-      const userInfo = this.loginService.userInfoSignal()
-      // console.log('--- userInfo: ', userInfo);
+      this.userInfo = this.loginService.userInfoSignal()
     })
   }
 
@@ -40,6 +43,7 @@ export class NavbarComponent {
   };
 
   logout(playerName: string | undefined | null): any {
+    if (this.userInfo === undefined) this.router.navigate(['/login']);
     if (playerName) {
       this.loginService.postLogout(playerName)
         .pipe(take(1))

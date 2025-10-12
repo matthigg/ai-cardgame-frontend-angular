@@ -53,8 +53,6 @@ export class LoginService {
       .pipe(
         take(1),
         tap(response => {
-          // this.userInfo = response;
-          // console.log('--- response: ', response);
           this.userInfoSignal.set(null);
         }),
       );

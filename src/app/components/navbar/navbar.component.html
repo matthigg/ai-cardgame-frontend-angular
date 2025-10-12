@@ -1,17 +1,17 @@
 <mat-toolbar id="navbar-wrapper">
-  <button mat-button (click)="navigateToLogin()">
+  <button mat-button (click)="navigateToLogin()" *ngIf="!userInfo">
     Login
   </button>
 
-  <button mat-button (click)="logout(loginService.userInfoSignal()?.name)">
+  <button mat-button (click)="logout(loginService.userInfoSignal()?.name)" *ngIf="userInfo">
     Logout
   </button>
 
-  <button mat-button (click)="navigateToDojo()">
+  <button mat-button (click)="navigateToDojo()" *ngIf="userInfo">
     Dojo
   </button>
 
-  <button mat-button (click)="openDialog()">
+  <button mat-button (click)="openDialog()" *ngIf="userInfo">
     Settings
   </button>
 </mat-toolbar>
