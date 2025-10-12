@@ -4,30 +4,6 @@
 <mat-sidenav-container>
   <mat-sidenav #sidenav mode="side" opened>
     <div>
-      <mat-form-field [formGroup]="colorThemeService.colorThemeFormGroup">
-        <mat-label>Color Theme</mat-label>
-        <mat-select 
-          formControlName="colorThemeFC"
-          (selectionChange)="colorThemeService.setTheme(
-            $event.value,
-            lightOrDarkFC.value ? 'dark' : 'light'
-        )">
-          @for (theme of colorThemeService.themes; track theme) {
-            <mat-option [value]="theme"> {{ theme }} </mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-
-      <mat-checkbox 
-        [formControl]="lightOrDarkFC" 
-        (change)="colorThemeService.setTheme(
-          colorThemeFC.value,
-          lightOrDarkFC.value ? 'dark' : 'light'
-        )"
-      >
-        {{ lightOrDarkFC.value ? 'Dark' : 'Light' }}
-      </mat-checkbox>
-
       <button mat-button (click)="dojoService.onTrain(playerCreatureName)">
         Run Training Loop ({{ playerCreatureName }})
       </button>
