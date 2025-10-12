@@ -41,7 +41,7 @@ export class LoginService {
       );
   }
 
-  postLogout(playerName: string): Observable<{ 
+  postDelete(playerName: string): Observable<{ 
     status: string, 
     message: string,
     deleted_checkpoints: string 
@@ -49,7 +49,7 @@ export class LoginService {
     const body = {
       name: playerName,
     }
-    return this.http.post<any>(`${this.urlPlayer}/logout`, body)
+    return this.http.post<any>(`${this.urlPlayer}/delete`, body)
       .pipe(
         take(1),
         tap(response => {

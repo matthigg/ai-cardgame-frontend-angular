@@ -42,21 +42,9 @@ export class NavbarComponent {
     this.router.navigate(['/login']);
   };
 
-  logout(playerName: string | undefined | null): any {
-    if (this.userInfo === undefined) this.router.navigate(['/login']);
-    if (playerName) {
-      this.loginService.postLogout(playerName)
-        .pipe(take(1))
-        .subscribe(
-          response => {
-            console.log('--- logout response: ', response);
-            this.router.navigate(['/login']);
-          },
-          error => {
-            console.log('--- logout error: ', error);
-          }
-        );
-    }
+  logout(): void {
+    this.loginService.userInfoSignal.set(null);
+    this.router.navigate(['/login']);
   }
 
   openDialog(): void {

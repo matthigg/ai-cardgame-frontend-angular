@@ -4,21 +4,7 @@
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 
-// html {
-//   @include mat.theme((
-//     color: (
-//       primary: my-theme.$primary-palette,
-//       tertiary: my-theme.$tertiary-palette,
-//     ),
-//     typography: Roboto,
-//     density: 0,
-//   ));
-
-//   @media (prefers-contrast: more) {
-//     @include my-theme.high-contrast-overrides(dark);
-//   }
-// }
-
+// ------------------------ LIGHT THEMES ------------------------
 .red-theme-light {
   color-scheme: light;
   @include mat.theme((
@@ -26,6 +12,7 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     typography: Roboto,
     density: 0
   ));
+  --theme-foreground: #000;
 }
 
 .green-theme-light {
@@ -35,6 +22,7 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     typography: Roboto,
     density: 0
   ));
+  --theme-foreground: #000;
 }
 
 .blue-theme-light {
@@ -44,6 +32,7 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     typography: Roboto,
     density: 0
   ));
+  --theme-foreground: #000;
 }
 
 .yellow-theme-light {
@@ -53,6 +42,7 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     typography: Roboto,
     density: 0
   ));
+  --theme-foreground: #000;
 }
 
 .cyan-theme-light {
@@ -62,6 +52,7 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     typography: Roboto,
     density: 0
   ));
+  --theme-foreground: #000;
 }
 
 .magenta-theme-light {
@@ -71,6 +62,7 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     typography: Roboto,
     density: 0
   ));
+  --theme-foreground: #000;
 }
 
 .orange-theme-light {
@@ -80,6 +72,7 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     typography: Roboto,
     density: 0
   ));
+  --theme-foreground: #000;
 }
 
 .chartreuse-theme-light {
@@ -89,6 +82,7 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     typography: Roboto,
     density: 0
   ));
+  --theme-foreground: #000;
 }
 
 .spring-green-theme-light {
@@ -98,6 +92,7 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     typography: Roboto,
     density: 0
   ));
+  --theme-foreground: #000;
 }
 
 .azure-theme-light {
@@ -107,6 +102,7 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     typography: Roboto,
     density: 0
   ));
+  --theme-foreground: #000;
 }
 
 .violet-theme-light {
@@ -116,6 +112,7 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     typography: Roboto,
     density: 0
   ));
+  --theme-foreground: #000;
 }
 
 .rose-theme-light {
@@ -125,8 +122,10 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     typography: Roboto,
     density: 0
   ));
+  --theme-foreground: #000;
 }
 
+// ------------------------ DARK THEMES ------------------------
 .red-theme-dark {
   color-scheme: dark;
   @include mat.theme((
@@ -134,6 +133,7 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     typography: Roboto,
     density: 0
   ));
+  --theme-foreground: #fff;
 }
 
 .green-theme-dark {
@@ -143,6 +143,7 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     typography: Roboto,
     density: 0
   ));
+  --theme-foreground: #fff;
 }
 
 .blue-theme-dark {
@@ -152,6 +153,7 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     typography: Roboto,
     density: 0
   ));
+  --theme-foreground: #fff;
 }
 
 .yellow-theme-dark {
@@ -161,6 +163,7 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     typography: Roboto,
     density: 0
   ));
+  --theme-foreground: #fff;
 }
 
 .cyan-theme-dark {
@@ -170,6 +173,7 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     typography: Roboto,
     density: 0
   ));
+  --theme-foreground: #fff;
 }
 
 .magenta-theme-dark {
@@ -179,6 +183,7 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     typography: Roboto,
     density: 0
   ));
+  --theme-foreground: #fff;
 }
 
 .orange-theme-dark {
@@ -188,6 +193,7 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     typography: Roboto,
     density: 0
   ));
+  --theme-foreground: #fff;
 }
 
 .chartreuse-theme-dark {
@@ -197,6 +203,7 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     typography: Roboto,
     density: 0
   ));
+  --theme-foreground: #fff;
 }
 
 .spring-green-theme-dark {
@@ -206,6 +213,7 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     typography: Roboto,
     density: 0
   ));
+  --theme-foreground: #fff;
 }
 
 .azure-theme-dark {
@@ -215,6 +223,7 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     typography: Roboto,
     density: 0
   ));
+  --theme-foreground: #fff;
 }
 
 .violet-theme-dark {
@@ -224,6 +233,7 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     typography: Roboto,
     density: 0
   ));
+  --theme-foreground: #fff;
 }
 
 .rose-theme-dark {
@@ -233,7 +243,10 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     typography: Roboto,
     density: 0
   ));
+  --theme-foreground: #fff;
 }
 
-
-
+// ------------------------ USE THE FOREGROUND ------------------------
+#settings-dialog-wrapper p {
+  color: var(--theme-foreground);
+}

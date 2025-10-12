@@ -1,3 +1,4 @@
+import { OverlayContainer } from '@angular/cdk/overlay';
 import { inject, Injectable } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 
@@ -6,13 +7,14 @@ import { FormBuilder } from '@angular/forms';
 })
 export class ColorThemeService {
   private fb: FormBuilder = inject(FormBuilder);
+  private overlay = inject(OverlayContainer);
 
   colorThemeFormGroup = this.fb.group({
     colorThemeFC: '',
     lightOrDarkFC: false,
   });
 
-  private currentTheme: string = 'blue';
+  private currentThemeClass: string = 'blue-theme-light'; // full class name
   public themes = [
     'Red', 
     'Green', 
@@ -28,19 +30,37 @@ export class ColorThemeService {
     'Rose'
   ];
 
-  setTheme(theme: string, lightOrDark: string): void {
+  constructor() {}
+
+  setTheme(theme: string, lightOrDark: 'light' | 'dark'): void {
+    const themeClass = `${theme.toLowerCase()}-theme-${lightOrDark}`;
     const body = document.body;
+    const host = this.overlay.getContainerElement();
+
+    // Remove all previous theme classes from body
     this.themes.forEach(oldTheme => {
       body.classList.remove(`${oldTheme.toLowerCase()}-theme-light`);
       body.classList.remove(`${oldTheme.toLowerCase()}-theme-dark`);
     });
-    body.classList.add(`${theme.toLowerCase()}-theme-${lightOrDark}`);
-    this.currentTheme = theme;
+
+    // Add the new theme class to body
+    body.classList.add(themeClass);
+
+    // Remove previous theme from overlay
+    if (this.currentThemeClass) {
+      host.classList.remove(this.currentThemeClass);
+    }
+
+    // Add new theme to overlay
+    host.classList.add(themeClass);
+
+    // Update current theme
+    this.currentThemeClass = themeClass;
+
+    console.log('--- Theme applied:', themeClass);
   }
 
   getTheme(): string {
-    return this.currentTheme;
+    return this.currentThemeClass;
   }
-
-  constructor() { }
 }

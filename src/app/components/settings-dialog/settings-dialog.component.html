@@ -24,4 +24,25 @@
   >
     {{ lightOrDarkFC.value ? 'Dark' : 'Light' }}
   </mat-checkbox>
+
+  <br><br><br><br>
+
+  <!-- Delete Button / Confirmation Section -->
+  <div *ngIf="!confirmingDelete; else confirmTemplate">
+    <button mat-button color="warn" (click)="showDeleteConfirmation()" *ngIf="userInfo">
+      Delete {{ loginService.userInfoSignal()?.name }}
+    </button>
+  </div>
+
+  <ng-template #confirmTemplate>
+    <div class="confirm-delete">
+      <p>Are you sure you want to delete <b>{{ loginService.userInfoSignal()?.name }}</b>?</p>
+      <div class="confirm-actions">
+        <button mat-stroked-button (click)="cancelDelete()">Cancel</button>
+        <button mat-flat-button color="warn" (click)="confirmDelete(loginService.userInfoSignal()?.name)">
+          Yes, delete
+        </button>
+      </div>
+    </div>
+  </ng-template>
 </div>
