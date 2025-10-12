@@ -5,24 +5,22 @@
   flex-direction: column;
   align-items: flex-start;
   padding: 12px;
-
-  // Let all text inherit Angular Material's default foreground color
-  color: var(--mat-app-on-surface);
-
-  .confirm-delete {
+  & hr {
+    width: 100%;
+  }
+  & #settings-dialog-header {
+    color: var(--theme-foreground, black);
+  }
+  & .confirm-delete {
     margin-top: 16px;
-
-    // Smooth transition when theme changes
     transition: color 0.3s ease;
-
-    p {
+    & p {
       margin: 0 0 8px 0;
       font-size: 14px;
       line-height: 1.4;
       color: var(--theme-foreground, black);
     }
-
-    .confirm-actions {
+    & .confirm-actions {
       display: flex;
       gap: 8px;
       margin-top: 8px;

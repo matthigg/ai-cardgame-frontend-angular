@@ -7,243 +7,243 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 // ------------------------ LIGHT THEMES ------------------------
 .red-theme-light {
   color-scheme: light;
+  --theme-foreground: #000;
   @include mat.theme((
     color: mat.$red-palette,
     typography: Roboto,
     density: 0
   ));
-  --theme-foreground: #000;
 }
 
 .green-theme-light {
   color-scheme: light;
+  --theme-foreground: #000;
   @include mat.theme((
     color: mat.$green-palette,
     typography: Roboto,
     density: 0
   ));
-  --theme-foreground: #000;
 }
 
 .blue-theme-light {
   color-scheme: light;
+  --theme-foreground: #000;
   @include mat.theme((
     color: mat.$blue-palette,
     typography: Roboto,
     density: 0
   ));
-  --theme-foreground: #000;
 }
 
 .yellow-theme-light {
   color-scheme: light;
+  --theme-foreground: #000;
   @include mat.theme((
     color: mat.$yellow-palette,
     typography: Roboto,
     density: 0
   ));
-  --theme-foreground: #000;
 }
 
 .cyan-theme-light {
   color-scheme: light;
+  --theme-foreground: #000;
   @include mat.theme((
     color: mat.$cyan-palette,
     typography: Roboto,
     density: 0
   ));
-  --theme-foreground: #000;
 }
 
 .magenta-theme-light {
   color-scheme: light;
+  --theme-foreground: #000;
   @include mat.theme((
     color: mat.$magenta-palette,
     typography: Roboto,
     density: 0
   ));
-  --theme-foreground: #000;
 }
 
 .orange-theme-light {
   color-scheme: light;
+  --theme-foreground: #000;
   @include mat.theme((
     color: mat.$orange-palette,
     typography: Roboto,
     density: 0
   ));
-  --theme-foreground: #000;
 }
 
 .chartreuse-theme-light {
   color-scheme: light;
+  --theme-foreground: #000;
   @include mat.theme((
     color: mat.$chartreuse-palette,
     typography: Roboto,
     density: 0
   ));
-  --theme-foreground: #000;
 }
 
 .spring-green-theme-light {
   color-scheme: light;
+  --theme-foreground: #000;
   @include mat.theme((
     color: mat.$spring-green-palette,
     typography: Roboto,
     density: 0
   ));
-  --theme-foreground: #000;
 }
 
 .azure-theme-light {
   color-scheme: light;
+  --theme-foreground: #000;
   @include mat.theme((
     color: mat.$azure-palette,
     typography: Roboto,
     density: 0
   ));
-  --theme-foreground: #000;
 }
 
 .violet-theme-light {
   color-scheme: light;
+  --theme-foreground: #000;
   @include mat.theme((
     color: mat.$violet-palette,
     typography: Roboto,
     density: 0
   ));
-  --theme-foreground: #000;
 }
 
 .rose-theme-light {
   color-scheme: light;
+  --theme-foreground: #000;
   @include mat.theme((
     color: mat.$rose-palette,
     typography: Roboto,
     density: 0
   ));
-  --theme-foreground: #000;
 }
 
 // ------------------------ DARK THEMES ------------------------
 .red-theme-dark {
   color-scheme: dark;
+  --theme-foreground: #fff;
   @include mat.theme((
     color: mat.$red-palette,
     typography: Roboto,
     density: 0
   ));
-  --theme-foreground: #fff;
 }
 
 .green-theme-dark {
   color-scheme: dark;
+  --theme-foreground: #fff;
   @include mat.theme((
     color: mat.$green-palette,
     typography: Roboto,
     density: 0
   ));
-  --theme-foreground: #fff;
 }
 
 .blue-theme-dark {
   color-scheme: dark;
+  --theme-foreground: #fff;
   @include mat.theme((
     color: mat.$blue-palette,
     typography: Roboto,
     density: 0
   ));
-  --theme-foreground: #fff;
 }
 
 .yellow-theme-dark {
   color-scheme: dark;
+  --theme-foreground: #fff;
   @include mat.theme((
     color: mat.$yellow-palette,
     typography: Roboto,
     density: 0
   ));
-  --theme-foreground: #fff;
 }
 
 .cyan-theme-dark {
   color-scheme: dark;
+  --theme-foreground: #fff;
   @include mat.theme((
     color: mat.$cyan-palette,
     typography: Roboto,
     density: 0
   ));
-  --theme-foreground: #fff;
 }
 
 .magenta-theme-dark {
   color-scheme: dark;
+  --theme-foreground: #fff;
   @include mat.theme((
     color: mat.$magenta-palette,
     typography: Roboto,
     density: 0
   ));
-  --theme-foreground: #fff;
 }
 
 .orange-theme-dark {
   color-scheme: dark;
+  --theme-foreground: #fff;
   @include mat.theme((
     color: mat.$orange-palette,
     typography: Roboto,
     density: 0
   ));
-  --theme-foreground: #fff;
 }
 
 .chartreuse-theme-dark {
   color-scheme: dark;
+  --theme-foreground: #fff;
   @include mat.theme((
     color: mat.$chartreuse-palette,
     typography: Roboto,
     density: 0
   ));
-  --theme-foreground: #fff;
 }
 
 .spring-green-theme-dark {
   color-scheme: dark;
+  --theme-foreground: #fff;
   @include mat.theme((
     color: mat.$spring-green-palette,
     typography: Roboto,
     density: 0
   ));
-  --theme-foreground: #fff;
 }
 
 .azure-theme-dark {
   color-scheme: dark;
+  --theme-foreground: #fff;
   @include mat.theme((
     color: mat.$azure-palette,
     typography: Roboto,
     density: 0
   ));
-  --theme-foreground: #fff;
 }
 
 .violet-theme-dark {
   color-scheme: dark;
+  --theme-foreground: #fff;
   @include mat.theme((
     color: mat.$violet-palette,
     typography: Roboto,
     density: 0
   ));
-  --theme-foreground: #fff;
 }
 
 .rose-theme-dark {
   color-scheme: dark;
+  --theme-foreground: #fff;
   @include mat.theme((
     color: mat.$rose-palette,
     typography: Roboto,
     density: 0
   ));
-  --theme-foreground: #fff;
 }
 
 // ------------------------ USE THE FOREGROUND ------------------------

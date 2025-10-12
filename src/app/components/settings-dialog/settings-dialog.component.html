@@ -1,4 +1,5 @@
 <div id="settings-dialog-wrapper">
+  <h4 id="settings-dialog-header">Settings</h4>
   <mat-form-field [formGroup]="colorThemeService.colorThemeFormGroup">
     <mat-label>Color Theme</mat-label>
     <mat-select 
@@ -13,8 +14,6 @@
     </mat-select>
   </mat-form-field>
 
-  <br>
-
   <mat-checkbox 
     [formControl]="lightOrDarkFC" 
     (change)="colorThemeService.setTheme(
@@ -25,7 +24,7 @@
     {{ lightOrDarkFC.value ? 'Dark' : 'Light' }}
   </mat-checkbox>
 
-  <br><br><br><br>
+  <hr>
 
   <!-- Delete Button / Confirmation Section -->
   <div *ngIf="!confirmingDelete; else confirmTemplate">
