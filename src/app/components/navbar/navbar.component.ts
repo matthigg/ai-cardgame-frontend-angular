@@ -27,7 +27,7 @@ export class NavbarComponent {
   constructor() {
     effect(() => {
       const userInfo = this.loginService.userInfoSignal()
-      console.log('--- userInfo: ', userInfo);
+      // console.log('--- userInfo: ', userInfo);
     })
   }
 
@@ -40,7 +40,6 @@ export class NavbarComponent {
   };
 
   logout(playerName: string | undefined | null): any {
-    console.log('--- playerName: ', playerName);
     if (playerName) {
       this.loginService.postLogout(playerName)
         .pipe(take(1))

@@ -1,8 +1,17 @@
-import { Component, inject, OnInit } from '@angular/core';
+import {
+  Component,
+  inject,
+  NgZone,
+  OnInit,
+  signal,
+  WritableSignal
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router, RouterModule, Event, NavigationStart } from '@angular/router'; // ✅ include both here
+import { Router, RouterModule, Event, NavigationEnd } from '@angular/router';
+import { filter, map, startWith } from 'rxjs';
 
+// Angular Material (v19+)
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -14,7 +23,6 @@ import { DojoService } from '../../services/dojo/dojo.service';
 import { ColorThemeService } from '../../services/color-theme/color-theme.service';
 import { SidenavToggleComponent } from '../sidenav-toggle-button/sidenav-toggle-button.component';
 import { NavbarComponent } from '../navbar/navbar.component';
-import { filter } from 'rxjs'; // ✅ RxJS v7+ uses this import
 
 @Component({
   selector: 'app-dashboard',
@@ -22,6 +30,8 @@ import { filter } from 'rxjs'; // ✅ RxJS v7+ uses this import
   imports: [
     CommonModule,
     FormsModule,
+    ReactiveFormsModule,
+    RouterModule,
     MatButtonModule,
     MatCheckboxModule,
     MatFormFieldModule,
@@ -29,8 +39,6 @@ import { filter } from 'rxjs'; // ✅ RxJS v7+ uses this import
     MatSelectModule,
     MatSidenavModule,
     NavbarComponent,
-    ReactiveFormsModule,
-    RouterModule,
     SidenavToggleComponent,
   ],
   templateUrl: './dashboard.component.html',
@@ -39,29 +47,25 @@ import { filter } from 'rxjs'; // ✅ RxJS v7+ uses this import
 export class DashboardComponent implements OnInit {
   public dojoService = inject(DojoService);
   public colorThemeService = inject(ColorThemeService);
-  public router = inject(Router);
+  private router = inject(Router);
+  private zone = inject(NgZone);
+
+  // ✅ Convert the router's url$ observable into a signal
+  activeRoute$ = this.router.events.pipe(
+    filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+    map(e => e.urlAfterRedirects),
+    startWith(this.router.url)
+  );
 
   playerCreatureName = '';
 
   ngOnInit(): void {
-    this.playerCreatureName = this.dojoService.dojoFormGroup
-      ?.get('playerFC')
-      ?.value
-      ?.creatureName;
-
-    this.dojoService.dojoFormGroup
-      ?.get('playerFC')
-      ?.valueChanges
-      ?.subscribe(response => {
-        this.playerCreatureName = response.creatureName;
+    const playerFC = this.dojoService.dojoFormGroup?.get('playerFC');
+    if (playerFC) {
+      this.playerCreatureName = playerFC.value?.creatureName ?? '';
+      playerFC.valueChanges?.subscribe(value => {
+        this.playerCreatureName = value.creatureName;
       });
-
-    // ✅ Use the correct Angular Router event types
-    this.router.events.pipe(
-      filter((event: Event): event is NavigationStart => event instanceof NavigationStart)
-    ).subscribe(event => {
-      console.log('Navigation started:', event);
-      // Perform actions when NavigationStart event occurs
-    });
+    }
   }
 }

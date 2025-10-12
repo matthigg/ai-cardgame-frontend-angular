@@ -1,3 +1,9 @@
 mat-sidenav {
   --mat-sidenav-container-width: 220px;
 }
+
+#dojo-wrapper {
+  & #dojo-header {
+    margin-left: 1rem;
+  }
+}
