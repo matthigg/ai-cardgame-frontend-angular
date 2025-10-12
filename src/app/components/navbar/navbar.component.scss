@@ -2,9 +2,15 @@
   border-radius: 0;
   color: var(--mat-sidenav-container-text-color, var(--mat-sys-on-surface-variant));
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   padding: 0.5rem;
-  button {
+  & button {
     width: fit-content;
+  }
+  & #navbar-left-wrapper {
+
+  }
+  & #navbar-right-wrapper {
+
   }
 }
