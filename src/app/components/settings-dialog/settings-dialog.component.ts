@@ -43,6 +43,19 @@ export class SettingsDialogComponent {
     });
   }
 
+  ngOnInit(): void {
+    this.handleDefaultColorTheme();
+  }
+
+  handleDefaultColorTheme(): void {
+    const color = this.colorThemeService.currentThemeClass.match(/^([^-]+)/)?.[0];
+    let colorCapitalized: string;
+    if (color?.charAt(0)?.toUpperCase() && color?.slice(1)) {
+      colorCapitalized = color?.charAt(0)?.toUpperCase() + color?.slice(1);
+      this.colorThemeFC.setValue(colorCapitalized)
+    }
+  }
+
   get colorThemeFC(): FormControl {
     return this.colorThemeService.colorThemeFormGroup.get('colorThemeFC') as FormControl;
   }

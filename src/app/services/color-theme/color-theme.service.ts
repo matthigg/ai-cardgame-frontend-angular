@@ -14,7 +14,7 @@ export class ColorThemeService {
     lightOrDarkFC: false,
   });
 
-  private currentThemeClass: string = 'blue-theme-light'; // full class name
+  public currentThemeClass: string = 'blue-theme-light'; // full class name
   public themes = [
     'Red', 
     'Green', 
