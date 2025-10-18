@@ -1,0 +1,34 @@
+<h2 mat-dialog-title>{{ data.name }} — Neural Network Details</h2>
+
+<mat-dialog-content class="dialog-content">
+  <section>
+    <h3>Neural Network Config</h3>
+    <div class="info-grid">
+      <div *ngFor="let key of nnConfigKeys" class="info-row">
+        <strong>{{ key }}:</strong> 
+        <span>{{ data.nn_config[key] }}</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h3>Reward Configuration</h3>
+    <div class="info-grid">
+      <div *ngFor="let key of rewardKeys" class="info-row">
+        <strong>{{ key }}:</strong> 
+        <span>{{ data.reward_config[key] }}</span>
+      </div>
+    </div>
+  </section>
+
+  <section *ngIf="data.special_abilities?.length">
+    <h3>Special Abilities</h3>
+    <div class="abilities">
+      <span *ngFor="let ability of data.special_abilities" class="ability-chip">{{ ability }}</span>
+    </div>
+  </section>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-stroked-button color="primary" (click)="close()">Close</button>
+</mat-dialog-actions>

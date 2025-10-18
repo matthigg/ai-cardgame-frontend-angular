@@ -5,6 +5,8 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { CommonModule } from '@angular/common';
+import { MatDialog } from '@angular/material/dialog';
+import { CreatureDetailsDialogComponent } from '../creature-details-dialog/creature-details-dialog.component';
 
 const mockUserInfo = {
   id: 5,
@@ -68,6 +70,7 @@ const mockUserInfo = {
 export class NeurodeckComponent implements OnInit {
   public userInfoService = inject(LoginService);
   public userInfo: PlayerModel | null = null;
+  public dialog = inject(MatDialog);
 
   ngOnInit(): void {
     this.userInfo = this.userInfoService.userInfoSignal()
@@ -75,7 +78,9 @@ export class NeurodeckComponent implements OnInit {
   }
 
   viewDetails(creature: any): void {
-    console.log('View details for:', creature);
-    // later: open a dialog showing neural network config, stats, training data, etc.
+    this.dialog.open(CreatureDetailsDialogComponent, {
+      width: '500px',
+      data: creature
+    });
   }
 }
