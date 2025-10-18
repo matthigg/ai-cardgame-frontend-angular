@@ -1,6 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { LoginService } from '../../services/login/login.service';
 import { PlayerModel } from '../../shared/models/players.model';
+import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
@@ -60,6 +61,7 @@ const mockUserInfo = {
   selector: 'app-neurodeck',
   imports: [ 
     CommonModule, 
+    MatButtonModule, 
     MatCardModule, 
     MatIconModule, 
     MatProgressBarModule 

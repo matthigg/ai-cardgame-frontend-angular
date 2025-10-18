@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-creature-details-dialog',
-  imports: [ CommonModule, MatDialogModule ],
+  imports: [ CommonModule, MatButtonModule, MatDialogModule ],
   templateUrl: './creature-details-dialog.component.html',
   styleUrls: ['./creature-details-dialog.component.scss']
 })
