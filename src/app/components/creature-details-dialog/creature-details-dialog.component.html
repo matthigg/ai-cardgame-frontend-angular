@@ -2,6 +2,11 @@
 
 <mat-dialog-content class="dialog-content">
   <section>
+    <h3>Neural Network Structure</h3>
+    <div #networkViz class="network-viz"></div>
+  </section>
+
+  <section>
     <h3>Neural Network Config</h3>
     <div class="info-grid">
       <div *ngFor="let key of nnConfigKeys" class="info-row">
