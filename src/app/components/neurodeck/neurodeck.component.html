@@ -1,0 +1,42 @@
+<div id="neurodeck-container" *ngIf="userInfo">
+  <h1 class="page-title">Neurodeck</h1>
+
+  <div class="creature-grid">
+    <mat-card *ngFor="let creature of userInfo?.creatures" appearance="outlined" class="creature-card">
+      <mat-card-header>
+        <div mat-card-avatar class="creature-avatar">
+          <mat-icon>pets</mat-icon>
+        </div>
+        <mat-card-title>{{ creature.name }}</mat-card-title>
+        <mat-card-subtitle>Owner: {{ creature.owner }}</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="stat">
+          <strong>HP:</strong>
+          <mat-progress-bar mode="determinate" [value]="(creature.runtime_state.hp / creature.max_hp) * 100"></mat-progress-bar>
+          <span>{{ creature.runtime_state.hp }}/{{ creature.max_hp }}</span>
+        </div>
+
+        <div class="stat">
+          <strong>Energy:</strong>
+          <mat-progress-bar color="accent" mode="determinate" [value]="(creature.runtime_state.energy / creature.max_energy) * 100"></mat-progress-bar>
+          <span>{{ creature.runtime_state.energy }}/{{ creature.max_energy }}</span>
+        </div>
+
+        <div class="stat">
+          <strong>Speed:</strong> {{ creature.speed }}
+        </div>
+
+        <div class="abilities">
+          <strong>Abilities:</strong>
+          <span *ngFor="let ability of creature.special_abilities" class="ability-chip">{{ ability }}</span>
+        </div>
+      </mat-card-content>
+
+      <mat-card-actions>
+        <button mat-stroked-button color="primary" (click)="viewDetails(creature)">View Details</button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+</div>

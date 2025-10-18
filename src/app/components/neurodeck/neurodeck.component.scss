@@ -1,0 +1,70 @@
+#neurodeck-container {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  .page-title {
+    font-size: 2rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+  }
+
+  .creature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    width: 100%;
+    max-width: 1200px;
+  }
+
+  .creature-card {
+    border-radius: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+    mat-card-header {
+      align-items: center;
+    }
+
+    .creature-avatar {
+      background-color: #3f51b5;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+    }
+
+    .stat {
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+      display: flex;
+      flex-direction: column;
+
+      span {
+        font-size: 0.8rem;
+        text-align: right;
+        opacity: 0.8;
+      }
+    }
+
+    .abilities {
+      margin-top: 1rem;
+
+      .ability-chip {
+        display: inline-block;
+        background: rgba(63, 81, 181, 0.1);
+        color: #3f51b5;
+        padding: 0.2rem 0.5rem;
+        border-radius: 0.5rem;
+        margin-right: 0.25rem;
+        font-size: 0.8rem;
+      }
+    }
+
+    mat-card-actions {
+      display: flex;
+      justify-content: flex-end;
+    }
+  }
+}
