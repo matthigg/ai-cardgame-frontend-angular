@@ -36,31 +36,6 @@
     <!-- Neurodeck -->
     <div id="dojo-wrapper" *ngIf="(activeRoute$ | async)?.includes('/neurodeck')">
       <h4 id="dojo-header">Neurodeck</h4>
-      <!-- <mat-form-field [formGroup]="dojoService.dojoFormGroup">
-        <mat-label>Your creature</mat-label>
-        <mat-select formControlName="playerFC">
-          @for (pc of dojoService.playerCreatures; track pc) {
-            <mat-option [value]="pc">
-              {{ pc.playerName }} - {{ pc.creatureName }}
-            </mat-option>
-          }
-        </mat-select>
-      </mat-form-field> -->
-
-      <!-- <mat-form-field [formGroup]="dojoService.dojoFormGroup">
-        <mat-label>Enemy creature</mat-label>
-        <mat-select formControlName="enemyFC">
-          @for (ec of dojoService.enemyCreatures; track ec) {
-            <mat-option [value]="ec">
-              {{ ec.playerName }} - {{ ec.creatureName }}
-            </mat-option>
-          }
-        </mat-select>
-      </mat-form-field> -->
-
-      <!-- <button mat-button (click)="dojoService.onTrain(playerCreatureName)">
-        Run Training Loop
-      </button> -->
     </div>
   </mat-sidenav>
 

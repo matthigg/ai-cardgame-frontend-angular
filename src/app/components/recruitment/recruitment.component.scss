@@ -1,0 +1,56 @@
+.recruitment-container {
+  padding: 2rem;
+
+  h1 {
+    font-size: 2rem;
+    color: #673ab7;
+  }
+
+  p {
+    color: #555;
+    margin-bottom: 1.5rem;
+  }
+
+  .creature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .creature-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+    }
+
+    .avatar {
+      background-color: #e0e0e0;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    .abilities {
+      margin-bottom: 0.5rem;
+
+      .ability-tag {
+        background: #ede7f6;
+        color: #4527a0;
+        border-radius: 12px;
+        padding: 0.2rem 0.6rem;
+        margin-right: 0.3rem;
+        font-size: 0.8rem;
+      }
+    }
+  }
+}

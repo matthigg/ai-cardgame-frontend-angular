@@ -1,0 +1,28 @@
+<div class="recruitment-container">
+  <h1>Creature Marketplace</h1>
+  <p>Select a creature to recruit into your Neurodeck.</p>
+
+  <div class="creature-grid">
+    <mat-card *ngFor="let c of creatureTemplates" class="creature-card" appearance="outlined">
+      <mat-card-header>
+        <mat-card-title>{{ c.name }}</mat-card-title>
+        <mat-card-subtitle>Speed: {{ c.speed }}</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="stats">
+          <div>HP: {{ c.hp }} / {{ c.max_hp }}</div>
+          <div>Energy: {{ c.energy }} / {{ c.max_energy }}</div>
+        </div>
+        <div class="abilities">
+          <strong>Abilities:</strong>
+          <span *ngFor="let ability of c.special_abilities" class="ability-tag">{{ ability }}</span>
+        </div>
+      </mat-card-content>
+
+      <mat-card-actions align="end">
+        <button mat-stroked-button color="primary" (click)="recruit(c.name)">Recruit</button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+</div>
