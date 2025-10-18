@@ -42,16 +42,22 @@ export class CreatureDetailsDialogComponent implements AfterViewInit {
 
     const nn = this.data.nn_config;
     const hiddenSizes = nn.hidden_sizes || [];
-    const layers = [...hiddenSizes, 4];
+    const layers = [...hiddenSizes, 4]; // adjust output layer size if needed
 
-    const layerSpacing = width / (layers.length + 1);
     const neuronRadius = 6;
     const animIntensity = this.animationIntensity;
+
+    // --- Link / neuron constants ---
+    const LINK_BASE_COLOR = '#aaa';
+    const LINK_BASE_OPACITY = 0.5;
+    const LINK_BASE_WIDTH = 1;
+    const LINK_HIGHLIGHT_COLOR = '#3f51b5';
+    const LINK_HIGHLIGHT_OPACITY = 0.9;
+    const LINK_HIGHLIGHT_WIDTH = 2;
 
     const allNodes: any[] = [];
     const allLinks: any[] = [];
 
-    // --- Build nodes and links ---
     layers.forEach((count, i) => {
       for (let j = 0; j < count; j++) {
         allNodes.push({ layer: i, y: (height / (count + 1)) * (j + 1) });
@@ -79,9 +85,9 @@ export class CreatureDetailsDialogComponent implements AfterViewInit {
       .attr('y1', d => d.source.y)
       .attr('x2', d => layerPositions(d.target.layer))
       .attr('y2', d => d.target.y)
-      .attr('stroke', '#aaa')
-      .attr('stroke-width', 1)
-      .attr('opacity', 0.5);
+      .attr('stroke', LINK_BASE_COLOR)
+      .attr('stroke-width', LINK_BASE_WIDTH)
+      .attr('opacity', LINK_BASE_OPACITY);
 
     // --- Draw neurons ---
     const neuronGroup = svg.append('g')
@@ -96,54 +102,68 @@ export class CreatureDetailsDialogComponent implements AfterViewInit {
       .attr('opacity', 0.8)
       .style('cursor', 'pointer');
 
-    // --- Hover pulse effect ---
+    // --- Hover interactions ---
     neuronGroup
       .on('mouseenter', function (event, d) {
         const neuron = d3.select(this);
-        neuron.transition()
+        neuron.interrupt()
+          .transition()
           .duration(200)
           .attr('r', neuronRadius * animIntensity)
           .attr('fill', '#5c6bc0');
 
-        // Highlight outgoing links
-        linkGroup
-          .filter(link => link.source === d)
+        const outgoing = linkGroup.filter(link => link.source === d);
+
+        outgoing.interrupt()
           .transition()
           .duration(150)
-          .attr('stroke', '#3f51b5')
-          .attr('stroke-width', 2)
-          .attr('opacity', 0.8);
-
-        // Simulate “signal pulse” animation
-        linkGroup
-          .filter(link => link.source === d)
-          .each(function () {
+          .attr('stroke', LINK_HIGHLIGHT_COLOR)
+          .attr('stroke-width', LINK_HIGHLIGHT_WIDTH)
+          .attr('opacity', LINK_HIGHLIGHT_OPACITY)
+          .on('end', function () {
             d3.select(this)
               .transition()
               .duration(800)
               .ease(d3.easeSin)
-              .attr('stroke-opacity', 1)
-              .attr('stroke', '#7986cb')
+              .attr('opacity', 1)
               .transition()
-              .duration(800)
-              .attr('stroke-opacity', 0.4)
-              .attr('stroke', '#aaa')
-              .attr('stroke-width', 1);
+              .duration(400)
+              .attr('opacity', LINK_HIGHLIGHT_OPACITY);
           });
+
+        // Slightly fade non-outgoing links
+        linkGroup
+          .filter(link => link.source !== d)
+          .interrupt()
+          .transition()
+          .duration(150)
+          .attr('opacity', 0.25);
       })
       .on('mouseleave', function () {
+        // reset neuron visual
         d3.select(this)
+          .interrupt()
           .transition()
           .duration(200)
           .attr('r', neuronRadius)
           .attr('fill', '#3f51b5');
 
+        // stop all link animations
+        linkGroup.interrupt();
+
+        // immediately normalize links
+        linkGroup
+          .attr('stroke', LINK_BASE_COLOR)
+          .attr('stroke-width', LINK_BASE_WIDTH)
+          .attr('opacity', LINK_BASE_OPACITY);
+
+        // smooth fade to baseline
         linkGroup
           .transition()
           .duration(300)
-          .attr('stroke', '#aaa')
-          .attr('stroke-width', 1)
-          .attr('opacity', 0.5);
+          .attr('stroke', LINK_BASE_COLOR)
+          .attr('stroke-width', LINK_BASE_WIDTH)
+          .attr('opacity', LINK_BASE_OPACITY);
       });
 
     // --- Ambient idle animation ---
