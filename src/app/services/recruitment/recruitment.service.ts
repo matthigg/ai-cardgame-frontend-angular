@@ -4,15 +4,15 @@ import { Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class RecruitmentService {
-  private baseUrl = '/api/creatures';
+  private urlCreatures = 'http://127.0.0.1:8000/creatures';
 
   constructor(private http: HttpClient) {}
 
   getCreatureTemplates(): Observable<any> {
-    return this.http.get(`${this.baseUrl}/templates`);
+    return this.http.get(`${this.urlCreatures}/templates`);
   }
 
   recruitCreature(playerName: string, templateName: string): Observable<any> {
-    return this.http.post(`${this.baseUrl}/recruit/${playerName}`, { template_name: templateName });
+    return this.http.post(`${this.urlCreatures}/recruit/${playerName}`, { template_name: templateName });
   }
 }

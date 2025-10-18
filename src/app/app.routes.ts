@@ -3,6 +3,7 @@ import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { DojoComponent } from './components/dojo/dojo.component';
 import { LoginComponent } from './components/login/login.component';
 import { NeurodeckComponent } from './components/neurodeck/neurodeck.component';
+import { RecruitmentComponent } from './components/recruitment/recruitment.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -13,6 +14,7 @@ export const routes: Routes = [
     children: [
       { path: 'dojo', component: DojoComponent },
       { path: 'neurodeck', component: NeurodeckComponent },
+      { path: 'recruitment', component: RecruitmentComponent },
     ]
   },
 ];

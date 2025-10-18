@@ -46,6 +46,10 @@ export class NavbarComponent {
     this.router.navigate(['/neurodeck']);
   }
 
+  navigateToRecruitment(): void {
+    this.router.navigate(['/recruitment']);
+  }
+
   logout(): void {
     this.loginService.userInfoSignal.set(null);
     this.router.navigate(['/login']);
