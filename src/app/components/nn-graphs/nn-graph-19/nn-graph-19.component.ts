@@ -46,6 +46,7 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
   @Input() easeType: (t: number) => number = d3.easeLinear;
   @Input({ required: true }) isPlaying!: WritableSignal<boolean>;
   @Input() uncenteredNeuronPadding: number = 30;
+  @Input() maxEpochs: number = 100; // total epochs in training
 
   /** Single intensity control variable for neuron halos, node size, and link pulse */
   @Input() intensity: number = 1;
@@ -67,6 +68,8 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
   private _currentNodes: Node[] = [];
   private _currentLinks: Link[] = [];
   private _currentLayerMapping: number[][][] = [];
+
+  private progressBar!: d3.Selection<SVGRectElement, unknown, null, undefined>;
 
   private fb = inject(FormBuilder);
 
@@ -282,7 +285,13 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
     return { x: event.pageX -200, y: event.pageY -60 };
   }
 
-  private renderLayout(layout: { nodes: Node[], links: Link[], layerMapping: number[][][] }) {
+  private renderLayout(
+    layout: { 
+      nodes: Node[], 
+      links: Link[], 
+      layerMapping: number[][][] 
+    }
+  ) {
     const { nodes, links } = layout;
 
     this.svg.selectAll('*').remove();
@@ -351,6 +360,28 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
     this._currentNodes = nodes;
     this._currentLinks = links;
     this._currentLayerMapping = layout.layerMapping;
+
+    // Progress bar background
+    this.svg.append('rect')
+      .attr('class', 'progress-bar-bg')
+      .attr('x', 50)
+      .attr('y', this.svgRef.nativeElement.clientHeight - 20)
+      .attr('width', this.svgRef.nativeElement.clientWidth - 100)
+      .attr('height', 10)
+      .attr('fill', '#444')
+      .attr('rx', 5)
+      .attr('ry', 5);
+
+    // Progress bar foreground
+    this.progressBar = this.svg.append('rect')
+      .attr('class', 'progress-bar-fg')
+      .attr('x', 50)
+      .attr('y', this.svgRef.nativeElement.clientHeight - 20)
+      .attr('width', 0) // start at 0
+      .attr('height', 10)
+      .attr('fill', 'rgba(0, 195, 255, 1)')
+      .attr('rx', 5)
+      .attr('ry', 5);
   }
 
   private updateGraph(
@@ -440,6 +471,16 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
       .attr('fill', d => this.activationColorScale(d.activation))
       .attr('cx', d => d.x)
       .attr('cy', d => d.y);
+
+    if (epoch !== undefined && this.progressBar) {
+      const maxWidth = this.svgRef.nativeElement.clientWidth - 100;
+      const progressWidth = Math.min(1, epoch / this.maxEpochs) * maxWidth;
+
+      this.progressBar.transition()
+        .duration(this.easeDuration)
+        .ease(this.easeType)
+        .attr('width', progressWidth);
+    }
   }
 
   toggleCenterNeurons(): void {
