@@ -1,5 +1,4 @@
 <div class="recruitment-container">
-  <h1>Recruitment</h1>
   <p>Select a creature to recruit into your Neurodeck.</p>
 
   <div class="creature-grid">
@@ -15,7 +14,7 @@
           <div>Energy: {{ c.energy }} / {{ c.max_energy }}</div>
         </div>
         <div class="abilities">
-          <strong>Abilities:</strong>
+          Abilities:
           <span *ngFor="let ability of c.special_abilities" class="ability-tag">{{ ability }}</span>
         </div>
       </mat-card-content>

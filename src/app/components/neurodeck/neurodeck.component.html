@@ -11,23 +11,23 @@
 
       <mat-card-content>
         <div class="stat">
-          <strong>HP:</strong>
+          HP:
           <mat-progress-bar mode="determinate" [value]="(creature.runtime_state.hp / creature.max_hp) * 100"></mat-progress-bar>
           <span>{{ creature.runtime_state.hp }}/{{ creature.max_hp }}</span>
         </div>
 
         <div class="stat">
-          <strong>Energy:</strong>
+          Energy:
           <mat-progress-bar color="accent" mode="determinate" [value]="(creature.runtime_state.energy / creature.max_energy) * 100"></mat-progress-bar>
           <span>{{ creature.runtime_state.energy }}/{{ creature.max_energy }}</span>
         </div>
 
         <div class="stat">
-          <strong>Speed:</strong> {{ creature.speed }}
+          Speed: {{ creature.speed }}
         </div>
 
         <div class="abilities">
-          <strong>Abilities:</strong>
+          Abilities:
           <span *ngFor="let ability of creature.special_abilities" class="ability-chip">{{ ability }}</span>
         </div>
       </mat-card-content>

@@ -2,13 +2,19 @@ import { Component, inject, OnInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { RecruitmentService } from '../../services/recruitment/recruitment.service';
 import { LoginService } from '../../services/login/login.service';
 
 @Component({
   selector: 'app-recruitment',
-  imports: [CommonModule, MatButtonModule, MatCardModule],
+  imports: [
+    CommonModule, 
+    MatButtonModule, 
+    MatCardModule,
+    MatIconModule,
+  ],
   templateUrl: './recruitment.component.html',
   styleUrls: ['./recruitment.component.scss']
 })
