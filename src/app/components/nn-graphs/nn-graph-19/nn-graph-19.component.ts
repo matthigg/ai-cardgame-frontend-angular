@@ -71,6 +71,10 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
 
   private progressBar!: d3.Selection<SVGRectElement, unknown, null, undefined>;
 
+  // --- NEW: hovered node & last mouse position to enable dynamic tooltip update ---
+  private hoveredNode: Node | null = null;
+  private lastMousePos: { x: number; y: number } = { x: 0, y: 0 };
+
   private fb = inject(FormBuilder);
 
   colorPaletteKeys: string[] = Object.keys(paletteObj);
@@ -209,11 +213,15 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
   }
 
   private hardResetSvg(): void {
+    // interrupt ongoing transitions and remove everything
     this.svg.selectAll('*').interrupt();
     (this.svg.node() as SVGSVGElement)?.replaceChildren();
     this._currentNodes = [];
     this._currentLinks = [];
     this._currentLayerMapping = [];
+    // Reset hovered tooltip state
+    this.hoveredNode = null;
+    this.lastMousePos = { x: 0, y: 0 };
   }
 
   private ensureLayoutForCurrent(activations: number[][]) {
@@ -334,6 +342,7 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
       .attr('opacity', 0)
       .attr('pointer-events', 'none');
 
+    // NOTE: we attach mouse handlers that update hoveredNode and lastMousePos.
     nodeGroup.append('circle')
       .attr('class', 'node')
       .attr('cx', d => d.x)
@@ -341,7 +350,10 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
       .attr('r', 5 * this.intensity)
       .attr('fill', d => this.activationColorScale(d.activation))
       .on('mouseover', (event, d) => {
-        const pos = this.adjustTooltipPosition(event);
+        // store reference to the node object so updateGraph can update the tooltip value live
+        this.hoveredNode = d;
+        const pos = this.adjustTooltipPosition(event as MouseEvent);
+        this.lastMousePos = { x: pos.x, y: pos.y };
         this.tooltip
           .style('opacity', 1)
           .html(`Activation: ${d.activation.toFixed(3)}`)
@@ -349,13 +361,16 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
           .style('top', `${pos.y}px`);
       })
       .on('mousemove', (event, d) => {
-        const pos = this.adjustTooltipPosition(event);
-        this.tooltip
-          .html(`Activation: ${d.activation.toFixed(3)}`)
-          .style('left', `${pos.x}px`)
-          .style('top', `${pos.y}px`);
+        // update last mouse pos so dynamic tooltip can be repositioned from updateGraph
+        const pos = this.adjustTooltipPosition(event as MouseEvent);
+        this.lastMousePos = { x: pos.x, y: pos.y };
+        // also update position immediately (keeps tooltip following mouse while hovering)
+        this.tooltip.style('left', `${pos.x}px`).style('top', `${pos.y}px`);
       })
-      .on('mouseout', () => { this.tooltip.style('opacity', 0); });
+      .on('mouseout', () => {
+        this.hoveredNode = null;
+        this.tooltip.style('opacity', 0);
+      });
 
     this._currentNodes = nodes;
     this._currentLinks = links;
@@ -400,6 +415,19 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
           if (node) node.activation = d3.mean(indices.map(idx => layer[idx])) ?? 0;
         });
       });
+    }
+
+    // If user is currently hovering a node, update tooltip contents using the referenced node object
+    if (this.hoveredNode) {
+      try {
+        // Update tooltip text with freshest activation and keep it at last known mouse pos
+        this.tooltip
+          .html(`Activation: ${this.hoveredNode.activation.toFixed(3)}`)
+          .style('left', `${this.lastMousePos.x}px`)
+          .style('top', `${this.lastMousePos.y}px`);
+      } catch {
+        // ignore any DOM timing issues
+      }
     }
 
     this.svg.selectAll<SVGLineElement, Link>('.link')
