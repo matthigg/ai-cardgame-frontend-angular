@@ -1,1 +1,26 @@
-<p>nn-graph-19 works!</p>
+<div id="nn-graph-19-container">
+  <mat-form-field [formGroup]="colorPaletteFormGroup">
+    <mat-label>Color Palette</mat-label>
+    <mat-select formControlName="selectedValue" (selectionChange)="handleColorPalette($event.value)">
+      <mat-option *ngFor="let palette of colorPaletteKeys" [value]="palette">
+        {{ palette }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <button mat-button (click)="toggleShowPulses()">
+    Pulses: {{ showPulses ? 'Show' : 'Hide' }}
+  </button>
+  <button mat-button (click)="togglePulseDirection()">
+    Pulse Direction: {{ passDirection }}
+  </button>
+  <button mat-button (click)="toggleLayout()">
+    Layout: {{ layoutVertical ? 'Horizontal' : 'Vertical' }}
+  </button>
+  <button mat-button (click)="toggleCenterNeurons()">
+    Center Neurons: {{ centerNeurons ? 'ON' : 'OFF' }}
+  </button>
+</div>
+<div class="tooltip" #tooltip></div>
+
+<svg #svgRef></svg>

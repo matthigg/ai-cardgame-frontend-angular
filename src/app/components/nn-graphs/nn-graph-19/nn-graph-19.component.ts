@@ -1,9 +1,12 @@
-import { Component, effect, ElementRef, Input, OnInit, ViewChild, WritableSignal, AfterViewInit, signal, Output, EventEmitter } from '@angular/core';
+import { Component, effect, ElementRef, Input, OnInit, ViewChild, WritableSignal, AfterViewInit, signal, Output, EventEmitter, inject } from '@angular/core';
 import * as d3 from 'd3';
 import { Activations } from '../../../shared/models/activations.model';
 import { colorPalettes, defaultPalette, paletteObj } from '../../../shared/utils/utils';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
 
 interface Node {
   layer: number;
@@ -21,50 +24,16 @@ interface Link {
 
 @Component({
   selector: 'app-nn-graph-19',
-  imports: [CommonModule, FormsModule],
-  template: `
-    <div style="margin-bottom: 8px;">
-      <select [(ngModel)]="selectedValue" (change)="handleColorPalette()">
-        <option value="">Select an option</option>
-        <option *ngFor="let palette of colorPaletteKeys" [value]="palette">{{ palette }}</option>
-      </select>
-      <button (click)="toggleShowPulses()">
-        {{ showPulses ? 'Hide' : 'Show' }} Pulses
-      </button>
-      <button (click)="togglePulseDirection()">
-        {{ passDirection }} Pulse Direction
-      </button>
-      <button (click)="toggleLayout()">
-        {{ layoutVertical ? 'Horizontal Layout' : 'Vertical Layout' }}
-      </button>
-      <button (click)="toggleCenterNeurons()">
-        {{ centerNeurons ? 'Center Neurons: ON' : 'Center Neurons: OFF' }}
-      </button>
-    </div>
-    <div class="tooltip" #tooltip></div>
-    <svg #svgRef></svg>
-  `,
-  styles: [`
-    svg { width: 100%; height: 600px; background: #111; display: block; }
-    .halo { pointer-events: none; }
-    .activation-text, .weight-text {
-      font-size: 12px;
-      text-anchor: middle;
-      pointer-events: none;
-      font-family: monospace;
-    }
-    .tooltip {
-      position: absolute;
-      pointer-events: none;
-      background: rgba(0,0,0,0.8);
-      color: white;
-      padding: 4px 6px;
-      border-radius: 4px;
-      font-size: 12px;
-      opacity: 0;
-      transition: opacity 0.2s;
-    }
-  `]
+  imports: [ 
+    CommonModule, 
+    FormsModule, 
+    MatButtonModule, 
+    MatFormFieldModule, 
+    MatSelectModule, 
+    ReactiveFormsModule 
+  ],
+  templateUrl: './nn-graph-19.component.html',
+  styleUrls: ['./nn-graph-19.component.scss']
 })
 export class NnGraph19Component implements OnInit, AfterViewInit {
   @ViewChild('svgRef', { static: true }) svgRef!: ElementRef<SVGSVGElement>;
@@ -99,13 +68,17 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
   private _currentLinks: Link[] = [];
   private _currentLayerMapping: number[][][] = [];
 
+  private fb = inject(FormBuilder);
+
   colorPaletteKeys: string[] = Object.keys(paletteObj);
   colorScale = signal(colorPalettes(defaultPalette));
-  selectedValue: string = defaultPalette;
+  colorPaletteFormGroup = this.fb.group({
+    selectedValue: defaultPalette
+  })
 
-  handleColorPalette(): void {
-    if (this.selectedValue) {
-      this.colorScale.set(colorPalettes(this.selectedValue));
+  handleColorPalette(event: string): void {
+    if (event) {
+      this.colorScale.set(colorPalettes(event));
     }
     this.weightColorScale = d3.scaleLinear<string>()
       .domain([-1, 0, 1])
