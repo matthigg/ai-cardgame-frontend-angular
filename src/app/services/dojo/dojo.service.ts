@@ -113,7 +113,7 @@ export class DojoService {
         const activations = epochData.layers || [];
 
         // Push a frame
-        this.activations.set({ creature, epoch, lastEpoch, activations });
+        this.activations.set({ creature, epoch, lastEpoch, activations, activations_history_length: history.length });
 
         // Delay with cancellation check on both sides
         await new Promise(resolve => setTimeout(resolve, speed));

@@ -502,7 +502,12 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
 
     if (epoch !== undefined && this.progressBar) {
       const maxWidth = this.svgRef.nativeElement.clientWidth - 100;
-      const progressWidth = Math.min(1, epoch / this.maxEpochs) * maxWidth;
+
+      // Use activations_history_length from your WritableSignal data if available
+      const data = this.activations();
+      const totalEpochs = data?.activations_history_length ?? this.maxEpochs;
+
+      const progressWidth = Math.min(1, epoch / totalEpochs) * maxWidth;
 
       this.progressBar.transition()
         .duration(this.easeDuration)
