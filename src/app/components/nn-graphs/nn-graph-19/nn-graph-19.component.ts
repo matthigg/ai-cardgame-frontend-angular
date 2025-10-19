@@ -278,10 +278,25 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
     return { nodes, links, layerMapping };
   }
 
+  private adjustTooltipPosition(event: MouseEvent) {
+    return { x: event.pageX -200, y: event.pageY -60 };
+  }
+
   private renderLayout(layout: { nodes: Node[], links: Link[], layerMapping: number[][][] }) {
     const { nodes, links } = layout;
 
-    this.svg.selectAll<SVGLineElement, Link>('.link')
+    this.svg.selectAll('*').remove();
+
+    const linkLayer = this.svg.append('g').attr('class', 'links-layer');
+    const nodeLayer = this.svg.append('g').attr('class', 'nodes-layer');
+    const pulseLayer = this.svg.append('g').attr('class', 'pulses-layer');
+
+    (this as any)._linkLayer = linkLayer;
+    (this as any)._nodeLayer = nodeLayer;
+    (this as any)._pulseLayer = pulseLayer;
+
+    // Draw links
+    linkLayer.selectAll<SVGLineElement, Link>('.link')
       .data(links, d => `${d.source.layer}-${d.source.index}-${d.target.layer}-${d.target.index}`)
       .enter()
       .append('line')
@@ -293,21 +308,10 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
       .attr('stroke', d => this.weightColorScale(d.weight))
       .attr('stroke-width', 1 * this.intensity)
       .attr('opacity', 1 * this.intensity)
-      .on('mouseover', (event, d) => {
-        this.tooltip
-          .style('opacity', 1)
-          .html(`Weight: ${d.weight.toFixed(3)}`)
-          .style('left', `${event.pageX + 10}px`)
-          .style('top', `${event.pageY - 20}px`);
-      })
-      .on('mousemove', (event) => {
-        this.tooltip
-          .style('left', `${event.pageX + 10}px`)
-          .style('top', `${event.pageY - 20}px`);
-      })
-      .on('mouseout', () => { this.tooltip.style('opacity', 0); });
+      .attr('pointer-events', 'none');
 
-    const nodeGroup = this.svg.selectAll<SVGGElement, Node>('.node-group')
+    // Draw nodes
+    const nodeGroup = nodeLayer.selectAll<SVGGElement, Node>('.node-group')
       .data(nodes, d => `${d.layer}-${d.index}`)
       .enter()
       .append('g')
@@ -318,27 +322,29 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
       .attr('cx', d => d.x)
       .attr('cy', d => d.y)
       .attr('r', 0)
-      .attr('opacity', 0);
+      .attr('opacity', 0)
+      .attr('pointer-events', 'none');
 
     nodeGroup.append('circle')
       .attr('class', 'node')
       .attr('cx', d => d.x)
       .attr('cy', d => d.y)
       .attr('r', 5 * this.intensity)
-      .attr('opacity', 1)
       .attr('fill', d => this.activationColorScale(d.activation))
       .on('mouseover', (event, d) => {
+        const pos = this.adjustTooltipPosition(event);
         this.tooltip
           .style('opacity', 1)
           .html(`Activation: ${d.activation.toFixed(3)}`)
-          .style('left', `${event.pageX + 10}px`)
-          .style('top', `${event.pageY - 20}px`);
+          .style('left', `${pos.x}px`)
+          .style('top', `${pos.y}px`);
       })
       .on('mousemove', (event, d) => {
+        const pos = this.adjustTooltipPosition(event);
         this.tooltip
           .html(`Activation: ${d.activation.toFixed(3)}`)
-          .style('left', `${event.pageX + 10}px`)
-          .style('top', `${event.pageY - 20}px`);
+          .style('left', `${pos.x}px`)
+          .style('top', `${pos.y}px`);
       })
       .on('mouseout', () => { this.tooltip.style('opacity', 0); });
 
