@@ -24,3 +24,14 @@
 <div class="tooltip" #tooltip></div>
 
 <svg #svgRef></svg>
+
+<div class="progress-container">
+  <mat-progress-bar
+    mode="determinate"
+    [value]="progressPercent">
+  </mat-progress-bar>
+
+  <div class="epoch-label" *ngIf="currentEpoch">
+    Epoch {{ currentEpoch + 1 }} / {{ totalEpochs }}
+  </div>
+</div>

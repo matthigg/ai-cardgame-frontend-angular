@@ -7,6 +7,7 @@ import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule }
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatProgressBar } from '@angular/material/progress-bar';
 
 interface Node {
   layer: number;
@@ -29,6 +30,7 @@ interface Link {
     FormsModule, 
     MatButtonModule, 
     MatFormFieldModule, 
+    MatProgressBar,
     MatSelectModule, 
     ReactiveFormsModule 
   ],
@@ -70,6 +72,10 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
   private _currentLayerMapping: number[][][] = [];
 
   private progressBar!: d3.Selection<SVGRectElement, unknown, null, undefined>;
+  progressPercent: number | undefined = 0;
+  currentEpoch: number | undefined = 0;
+  totalEpochs: number | undefined = 0;
+
 
   // --- NEW: hovered node & last mouse position to enable dynamic tooltip update ---
   private hoveredNode: Node | null = null;
@@ -376,27 +382,27 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
     this._currentLinks = links;
     this._currentLayerMapping = layout.layerMapping;
 
-    // Progress bar background
-    this.svg.append('rect')
-      .attr('class', 'progress-bar-bg')
-      .attr('x', 50)
-      .attr('y', this.svgRef.nativeElement.clientHeight - 20)
-      .attr('width', this.svgRef.nativeElement.clientWidth - 100)
-      .attr('height', 10)
-      .attr('fill', '#444')
-      .attr('rx', 5)
-      .attr('ry', 5);
+    // // Progress bar background
+    // this.svg.append('rect')
+    //   .attr('class', 'progress-bar-bg')
+    //   .attr('x', 50)
+    //   .attr('y', this.svgRef.nativeElement.clientHeight - 20)
+    //   .attr('width', this.svgRef.nativeElement.clientWidth - 100)
+    //   .attr('height', 10)
+    //   .attr('fill', '#444')
+    //   .attr('rx', 5)
+    //   .attr('ry', 5);
 
     // Progress bar foreground
     this.progressBar = this.svg.append('rect')
-      .attr('class', 'progress-bar-fg')
-      .attr('x', 50)
-      .attr('y', this.svgRef.nativeElement.clientHeight - 20)
-      .attr('width', 0) // start at 0
-      .attr('height', 10)
-      .attr('fill', 'rgba(0, 195, 255, 1)')
-      .attr('rx', 5)
-      .attr('ry', 5);
+      // .attr('class', 'progress-bar-fg')
+      // .attr('x', 50)
+      // .attr('y', this.svgRef.nativeElement.clientHeight - 20)
+      // .attr('width', 0) // start at 0
+      // .attr('height', 10)
+      // .attr('fill', this.weightColorScale(0.5))
+      // .attr('rx', 5)
+      // .attr('ry', 5);
   }
 
   private updateGraph(
@@ -513,6 +519,12 @@ export class NnGraph19Component implements OnInit, AfterViewInit {
         .duration(this.easeDuration)
         .ease(this.easeType)
         .attr('width', progressWidth);
+
+      this.currentEpoch = epoch;
+      this.totalEpochs = data?.activations_history_length; // already available in your data
+      if (data?.activations_history_length) {
+        this.progressPercent = ((epoch + 1) / data?.activations_history_length) * 100;
+      }
     }
   }
 
